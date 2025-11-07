@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "967834798481",
+    "project_id": "adopets-c99db",
+    "storage_bucket": "adopets-c99db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:967834798481:android:19ad2718a62d1bb51ef230",
+        "android_client_info": {
+          "package_name": "com.adopets.app_movil"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "967834798481-j96s1c2rfes220vi6eaaf1jav49rtlb1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adopets.app_movil",
+            "certificate_hash": "42949275f219aa894f7115f425955320078a8d2a"
+          }
+        },
+        {
+          "client_id": "967834798481-qsbeavsh05o6tae9t4v8gt9c0o4eo7ug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtuSXynpuw63-xfx0MRlYB-Ib79jLsV1E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "967834798481-qsbeavsh05o6tae9t4v8gt9c0o4eo7ug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "967834798481-8lmvu5o01vbr8bofkeff34i2kdp77e06.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.adopets.appMovil"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
