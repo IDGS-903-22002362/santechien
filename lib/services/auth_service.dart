@@ -5,6 +5,7 @@ import '../config/api_config.dart';
 import '../models/api_response.dart';
 import '../models/auth_response.dart';
 import '../models/usuario.dart';
+import '../utils/ui_logger.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
 
@@ -86,6 +87,20 @@ class AuthService {
   Future<ApiResponse<AuthResponse>> _exchangeFirebaseToken(
     String idToken,
   ) async {
+    final logger = UILogger();
+
+    final msg1 = '🔄 Intercambiando token de Firebase por token de AdoPets...';
+    print(msg1);
+    logger.info(msg1);
+
+    final msg2 = '   Firebase Token: ${idToken.substring(0, 30)}...';
+    print(msg2);
+    logger.info(msg2);
+
+    final msg3 = '   Endpoint: ${ApiConfig.baseUrl}${ApiConfig.authFirebase}';
+    print(msg3);
+    logger.info(msg3);
+
     final response = await _apiService.post<AuthResponse>(
       ApiConfig.authFirebase,
       body: {'idToken': idToken},
@@ -93,8 +108,52 @@ class AuthService {
       requiresAuth: false,
     );
 
+    print('📦 Respuesta del backend:');
+    logger.info('📦 Respuesta del backend:');
+    print('   success: ${response.success}');
+    logger.info('   success: ${response.success}');
+    print('   message: ${response.message}');
+    logger.info('   message: ${response.message}');
+    print('   data: ${response.data != null ? 'PRESENTE' : 'NULL'}');
+    logger.info('   data: ${response.data != null ? 'PRESENTE' : 'NULL'}');
+
     if (response.success && response.data != null) {
+      final msg4 = '✅ Token intercambiado exitosamente';
+      print(msg4);
+      logger.success(msg4);
+
+      final msg5 = '   Usuario: ${response.data!.usuario.email}';
+      print(msg5);
+      logger.success(msg5);
+
+      print(
+        '   AccessToken length: ${response.data!.accessToken.length} chars',
+      );
+      logger.success(
+        '   AccessToken length: ${response.data!.accessToken.length} chars',
+      );
+
+      print(
+        '   RefreshToken length: ${response.data!.refreshToken.length} chars',
+      );
+      logger.success(
+        '   RefreshToken length: ${response.data!.refreshToken.length} chars',
+      );
+
+      print('   TokenType: ${response.data!.tokenType}');
+      logger.success('   TokenType: ${response.data!.tokenType}');
+
       await _saveSession(response.data!);
+    } else {
+      final errMsg = '❌ Error al intercambiar token: ${response.message}';
+      print(errMsg);
+      logger.error(errMsg);
+
+      if (response.errors.isNotEmpty) {
+        final errDetail = '   Errores: ${response.errors.join(', ')}';
+        print(errDetail);
+        logger.error(errDetail);
+      }
     }
 
     return response;
@@ -160,9 +219,40 @@ class AuthService {
 
   /// Guardar sesión
   Future<void> _saveSession(AuthResponse authResponse) async {
+    final logger = UILogger();
+
+    final msg1 = '💾 Guardando tokens en storage...';
+    print(msg1);
+    logger.info(msg1);
+
+    print('   AccessToken: ${authResponse.accessToken.substring(0, 20)}...');
+    logger.info(
+      '   AccessToken: ${authResponse.accessToken.substring(0, 20)}...',
+    );
+
+    print('   RefreshToken: ${authResponse.refreshToken.substring(0, 20)}...');
+    logger.info(
+      '   RefreshToken: ${authResponse.refreshToken.substring(0, 20)}...',
+    );
+
     await _storageService.saveAccessToken(authResponse.accessToken);
     await _storageService.saveRefreshToken(authResponse.refreshToken);
     await _storageService.saveUsuario(authResponse.usuario);
+
+    final msg2 = '✅ Sesión guardada correctamente';
+    print(msg2);
+    logger.success(msg2);
+
+    // Verificar que se guardó
+    final savedToken = await _storageService.getAccessToken();
+    final msg3 =
+        '🔍 Verificación - Token guardado: ${savedToken != null ? 'SÍ' : 'NO'}';
+    print(msg3);
+    if (savedToken != null) {
+      logger.success(msg3);
+    } else {
+      logger.error(msg3);
+    }
   }
 
   /// Obtener usuario actual desde storage

@@ -1,0 +1,240 @@
+{
+  "info": {
+    "name": "AdoPets - Test Token Flow",
+    "description": "Prueba el flujo completo de autenticación de AdoPets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login con Firebase Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Guardar el token automáticamente",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    ",
+              "    // Verificar estructura de respuesta",
+              "    pm.test('Respuesta tiene success', function () {",
+              "        pm.expect(jsonData).to.have.property('success');",
+              "    });",
+              "    ",
+              "    pm.test('Respuesta tiene data', function () {",
+              "        pm.expect(jsonData).to.have.property('data');",
+              "    });",
+              "    ",
+              "    pm.test('data tiene accessToken', function () {",
+              "        pm.expect(jsonData.data).to.have.property('accessToken');",
+              "    });",
+              "    ",
+              "    pm.test('data tiene refreshToken', function () {",
+              "        pm.expect(jsonData.data).to.have.property('refreshToken');",
+              "    });",
+              "    ",
+              "    pm.test('data tiene usuario', function () {",
+              "        pm.expect(jsonData.data).to.have.property('usuario');",
+              "    });",
+              "    ",
+              "    // Guardar tokens en variables de entorno",
+              "    if (jsonData.data && jsonData.data.accessToken) {",
+              "        pm.environment.set('accessToken', jsonData.data.accessToken);",
+              "        pm.environment.set('refreshToken', jsonData.data.refreshToken);",
+              "        console.log('✅ Token guardado:', jsonData.data.accessToken.substring(0, 30) + '...');",
+              "    }",
+              "}",
+              "",
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idToken\": \"{{firebaseIdToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/firebase",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "firebase"]
+        },
+        "description": "Intercambia un token de Firebase por un token JWT de AdoPets.\n\n**NOTA:** Debes obtener el firebaseIdToken desde la app Flutter después de hacer login con Google. Busca en los logs:\n```\nFirebase Token: eyJhbGciOiJSUzI1NiI...\n```"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Verificar Token con /auth/me",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Respuesta tiene datos de usuario', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData.data).to.have.property('email');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "me"]
+        },
+        "description": "Verifica que el token JWT funcione correctamente obteniendo los datos del usuario autenticado."
+      },
+      "response": []
+    },
+    {
+      "name": "3. POST - Registrar Mascota",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code es 200 o 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "pm.test('Mascota creada exitosamente', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Max\",\n  \"especie\": \"Perro\",\n  \"sexo\": 1,\n  \"raza\": \"Labrador\",\n  \"color\": \"Dorado\",\n  \"fechaNacimiento\": \"2020-01-15\",\n  \"peso\": 25.5,\n  \"esterilizado\": true,\n  \"observaciones\": \"Mascota muy cariñosa\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/MisMascotas",
+          "host": ["{{baseUrl}}"],
+          "path": ["MisMascotas"]
+        },
+        "description": "Registra una nueva mascota usando el token JWT de AdoPets."
+      },
+      "response": []
+    },
+    {
+      "name": "4. GET - Mis Mascotas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code es 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Respuesta contiene lista de mascotas', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/MisMascotas",
+          "host": ["{{baseUrl}}"],
+          "path": ["MisMascotas"]
+        },
+        "description": "Obtiene todas las mascotas del usuario autenticado."
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.100.11:5151/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "firebaseIdToken",
+      "value": "PEGA_AQUI_EL_TOKEN_DE_FIREBASE_DESDE_LA_APP",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

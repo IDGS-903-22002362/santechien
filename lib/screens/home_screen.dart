@@ -87,11 +87,35 @@ class HomeScreen extends StatelessWidget {
                   onTap: () => Navigator.pop(context),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.pets),
-                  title: const Text('Mascotas'),
+                  leading: const Icon(Icons.calendar_today),
+                  title: const Text('Mis Citas'),
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navegar a mascotas
+                    Navigator.pushNamed(context, '/citas');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.event_available),
+                  title: const Text('Solicitar Cita'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/solicitar-cita');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.assignment),
+                  title: const Text('Mis Solicitudes'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/mis-solicitudes');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.pets),
+                  title: const Text('Mis Mascotas'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/mis-mascotas');
                   },
                 ),
                 ListTile(
@@ -125,6 +149,30 @@ class HomeScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context);
                     // TODO: Navegar a configuración
+                  },
+                ),
+                const Divider(),
+                // Solo en desarrollo
+                ListTile(
+                  leading: const Icon(Icons.bug_report, color: Colors.orange),
+                  title: const Text(
+                    '🔍 Debug Auth',
+                    style: TextStyle(color: Colors.orange),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/debug-auth');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.article, color: Colors.blue),
+                  title: const Text(
+                    '📋 Ver Logs',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/ui-logs');
                   },
                 ),
                 const Divider(),
@@ -232,21 +280,32 @@ class HomeScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Explora nuestras mascotas disponibles y encuentra tu compañero perfecto.',
+                            'Gestiona las citas de tus mascotas de manera fácil y rápida.',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: AppTheme.textSecondary),
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              // TODO: Navegar a explorar mascotas
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Próximamente disponible'),
-                                ),
-                              );
-                            },
-                            child: const Text('Explorar Mascotas'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/mis-mascotas');
+                                },
+                                icon: const Icon(Icons.pets),
+                                label: const Text('Mis Mascotas'),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/solicitar-cita',
+                                  );
+                                },
+                                icon: const Icon(Icons.add_circle),
+                                label: const Text('Solicitar Cita'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
