@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../config/app_theme.dart';
 import '../../models/solicitud_cita.dart';
 import '../../services/solicitud_cita_service.dart';
 import '../../providers/auth_provider.dart';
@@ -180,18 +181,28 @@ class _SolicitudCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Número y estado
+              // Header: N?mero y estado
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    solicitud.numeroSolicitud,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      solicitud.numeroSolicitud,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _buildEstadoChip(),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _buildEstadoChip(),
+                    ),
+                  ),
                 ],
               ),
               const Divider(height: 16),
@@ -347,47 +358,72 @@ class _SolicitudCard extends StatelessWidget {
 
     switch (solicitud.estado) {
       case SolicitudEstado.pendiente:
-        color = Colors.orange;
+        color = AppTheme.warningColor;
         icon = Icons.schedule;
         break;
       case SolicitudEstado.enRevision:
-        color = Colors.blue;
+        color = AppTheme.infoColor;
         icon = Icons.visibility;
         break;
       case SolicitudEstado.pendientePago:
-        color = Colors.red;
+        color = AppTheme.errorColor;
         icon = Icons.payment;
         break;
       case SolicitudEstado.pagadaPendienteConfirmacion:
-        color = Colors.purple;
+        color = AppTheme.primaryDark;
         icon = Icons.hourglass_empty;
         break;
       case SolicitudEstado.confirmada:
-        color = Colors.green;
+        color = AppTheme.successColor;
         icon = Icons.check_circle;
         break;
       case SolicitudEstado.rechazada:
-        color = Colors.red;
+        color = AppTheme.errorColor;
         icon = Icons.cancel;
         break;
       case SolicitudEstado.cancelada:
-        color = Colors.grey;
+        color = AppTheme.textSecondary;
         icon = Icons.block;
         break;
       case SolicitudEstado.expirada:
-        color = Colors.grey;
+        color = AppTheme.textSecondary;
         icon = Icons.timer_off;
         break;
     }
 
-    return Chip(
-      avatar: Icon(icon, size: 16, color: Colors.white),
-      label: Text(
-        solicitud.estadoNombre,
-        style: const TextStyle(fontSize: 12, color: Colors.white),
+    final label = solicitud.estadoNombre.isNotEmpty
+        ? solicitud.estadoNombre
+        : solicitud.estado.label;
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 220),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-      backgroundColor: color,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

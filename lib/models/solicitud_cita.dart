@@ -149,32 +149,36 @@ class SolicitudCita extends Equatable {
   /// Crear desde JSON
   factory SolicitudCita.fromJson(Map<String, dynamic> json) {
     return SolicitudCita(
-      id: json['id'] as String,
-      numeroSolicitud: json['numeroSolicitud'] as String,
-      solicitanteId: json['solicitanteId'] as String,
-      nombreSolicitante: json['nombreSolicitante'] as String,
-      emailSolicitante: json['emailSolicitante'] as String,
+      id: json['id'] as String? ?? '',
+      numeroSolicitud: json['numeroSolicitud'] as String? ?? '',
+      solicitanteId: json['solicitanteId'] as String? ?? '',
+      nombreSolicitante: json['nombreSolicitante'] as String? ?? '',
+      emailSolicitante: json['emailSolicitante'] as String? ?? '',
       telefonoSolicitante: json['telefonoSolicitante'] as String?,
-      mascotaId: json['mascotaId'] as String,
-      nombreMascota: json['nombreMascota'] as String,
-      especieMascota: json['especieMascota'] as String,
+      mascotaId: json['mascotaId'] as String? ?? '',
+      nombreMascota: json['nombreMascota'] as String? ?? '',
+      especieMascota: json['especieMascota'] as String? ?? '',
       razaMascota: json['razaMascota'] as String?,
-      servicioId: json['servicioId'] as String,
-      descripcionServicio: json['descripcionServicio'] as String,
-      motivoConsulta: json['motivoConsulta'] as String,
+      servicioId: json['servicioId'] as String? ?? '',
+      descripcionServicio: json['descripcionServicio'] as String? ?? '',
+      motivoConsulta: json['motivoConsulta'] as String? ?? '',
       sintomas: json['sintomas'] as String?,
       esUrgente: json['esUrgente'] as bool? ?? false,
-      fechaHoraSolicitada: DateTime.parse(
-        json['fechaHoraSolicitada'] as String,
-      ),
-      duracionEstimadaMin: json['duracionEstimadaMin'] as int,
+      fechaHoraSolicitada: json['fechaHoraSolicitada'] != null
+          ? DateTime.parse(json['fechaHoraSolicitada'] as String)
+          : DateTime.now(),
+      duracionEstimadaMin: json['duracionEstimadaMin'] as int? ?? 30,
       veterinarioPreferidoId: json['veterinarioPreferidoId'] as String?,
       salaPreferidaId: json['salaPreferidaId'] as String?,
-      costoEstimado: (json['costoEstimado'] as num).toDouble(),
-      montoAnticipo: (json['montoAnticipo'] as num).toDouble(),
-      estado: SolicitudEstado.fromValue(json['estado'] as int),
-      estadoNombre: json['estadoNombre'] as String,
-      fechaSolicitud: DateTime.parse(json['fechaSolicitud'] as String),
+      costoEstimado: (json['costoEstimado'] as num?)?.toDouble() ?? 0.0,
+      montoAnticipo: (json['montoAnticipo'] as num?)?.toDouble() ?? 0.0,
+      estado: json['estado'] != null
+          ? SolicitudEstado.fromValue(json['estado'] as int)
+          : SolicitudEstado.pendiente,
+      estadoNombre: json['estadoNombre'] as String? ?? 'Pendiente',
+      fechaSolicitud: json['fechaSolicitud'] != null
+          ? DateTime.parse(json['fechaSolicitud'] as String)
+          : DateTime.now(),
       fechaRespuesta: json['fechaRespuesta'] != null
           ? DateTime.parse(json['fechaRespuesta'] as String)
           : null,
@@ -284,42 +288,46 @@ class SolicitudCita extends Equatable {
 
 /// Request para crear solicitud de cita (según documentación API)
 class CrearSolicitudCitaRequest {
-  final String mascotaId;
-  final String tipoServicioId; // Cambiado de servicioId
-  final DateTime fechaPreferida;
-  final String horaPreferida; // Formato "HH:mm"
-  final String? veterinarioPreferidoId;
-  final String motivo; // Cambiado de motivoConsulta
-  final String? sintomas; // NUEVO - requerido por API
-  final bool esUrgente; // NUEVO - requerido por API
-  final String telefonoContacto; // NUEVO - requerido por API
-  final String emailContacto; // NUEVO - requerido por API
+  // ✅ Campos REQUERIDOS por el API
+  final String solicitanteId; // Usuario que solicita
+  final String mascotaId; // ID de la mascota
+  final String nombreMascota; // Nombre de la mascota
+  final String especieMascota; // Especie (Perro, Gato, etc.)
+  final String? razaMascota; // Raza (opcional)
+  final String servicioId; // ID del servicio
+  final String descripcionServicio; // Descripción del servicio
+  final String motivoConsulta; // Motivo de la consulta
+  final String fechaHoraSolicitada; // Fecha/hora en formato ISO 8601
+  final int duracionEstimadaMin; // Duración estimada en minutos
+  final double costoEstimado; // Costo estimado del servicio
 
   const CrearSolicitudCitaRequest({
+    required this.solicitanteId,
     required this.mascotaId,
-    required this.tipoServicioId,
-    required this.fechaPreferida,
-    required this.horaPreferida,
-    this.veterinarioPreferidoId,
-    required this.motivo,
-    this.sintomas,
-    this.esUrgente = false,
-    required this.telefonoContacto,
-    required this.emailContacto,
+    required this.nombreMascota,
+    required this.especieMascota,
+    this.razaMascota,
+    required this.servicioId,
+    required this.descripcionServicio,
+    required this.motivoConsulta,
+    required this.fechaHoraSolicitada,
+    required this.duracionEstimadaMin,
+    required this.costoEstimado,
   });
 
   Map<String, dynamic> toJson() {
     return {
+      'solicitanteId': solicitanteId,
       'mascotaId': mascotaId,
-      'tipoServicioId': tipoServicioId,
-      'fechaPreferida': fechaPreferida.toIso8601String(),
-      'horaPreferida': horaPreferida,
-      'veterinarioPreferidoId': veterinarioPreferidoId,
-      'motivo': motivo,
-      'sintomas': sintomas,
-      'esUrgente': esUrgente,
-      'telefonoContacto': telefonoContacto,
-      'emailContacto': emailContacto,
+      'nombreMascota': nombreMascota,
+      'especieMascota': especieMascota,
+      'razaMascota': razaMascota,
+      'servicioId': servicioId,
+      'descripcionServicio': descripcionServicio,
+      'motivoConsulta': motivoConsulta,
+      'fechaHoraSolicitada': fechaHoraSolicitada,
+      'duracionEstimadaMin': duracionEstimadaMin,
+      'costoEstimado': costoEstimado,
     };
   }
 }

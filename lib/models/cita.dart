@@ -107,11 +107,13 @@ class Cita extends Equatable {
   /// Crear desde JSON
   factory Cita.fromJson(Map<String, dynamic> json) {
     return Cita(
-      id: json['id'] as String,
-      fechaHora: DateTime.parse(json['fechaHora'] as String),
+      id: json['id'] as String? ?? '',
+      fechaHora: json['fechaHora'] != null
+          ? DateTime.parse(json['fechaHora'] as String)
+          : DateTime.now(),
       duracionMinutos: json['duracionMinutos'] as int? ?? 30,
       status: CitaStatus.fromString(json['status'] as String? ?? 'Programada'),
-      tipoConsulta: json['tipoConsulta'] as String,
+      tipoConsulta: json['tipoConsulta'] as String? ?? '',
       motivo: json['motivo'] as String?,
       notas: json['notas'] as String?,
       diagnostico: json['diagnostico'] as String?,
@@ -120,9 +122,9 @@ class Cita extends Equatable {
           ? DateTime.parse(json['proximaRevision'] as String)
           : null,
       motivoCancelacion: json['motivoCancelacion'] as String?,
-      mascotaId: json['mascotaId'] as String,
+      mascotaId: json['mascotaId'] as String? ?? '',
       mascotaNombre: json['mascotaNombre'] as String?,
-      veterinarioId: json['veterinarioId'] as String,
+      veterinarioId: json['veterinarioId'] as String? ?? '',
       veterinarioNombre: json['veterinarioNombre'] as String?,
       salaId: json['salaId'] as String?,
       salaNombre: json['salaNombre'] as String?,

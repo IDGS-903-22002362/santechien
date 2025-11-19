@@ -196,127 +196,241 @@ class HomeScreen extends StatelessWidget {
         builder: (context, authProvider, _) {
           final usuario = authProvider.usuario;
 
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Avatar grande
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient(),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        usuario?.iniciales ?? '??',
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+          return SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final minHeight = constraints.maxHeight.isFinite
+                    ? constraints.maxHeight
+                    : MediaQuery.of(context).size.height;
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
                   ),
-                  const SizedBox(height: 24),
-
-                  // Nombre
-                  Text(
-                    '¡Hola, ${usuario?.nombre ?? 'Usuario'}!',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Email
-                  Text(
-                    usuario?.email ?? '',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Roles
-                  if (usuario?.roles.isNotEmpty ?? false)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: usuario!.roles.map((rol) {
-                        return Chip(
-                          label: Text(rol),
-                          backgroundColor: AppTheme.primaryLight,
-                        );
-                      }).toList(),
-                    ),
-                  const SizedBox(height: 48),
-
-                  // Mensaje de bienvenida
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.pets,
-                            size: 48,
-                            color: AppTheme.primaryColor,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: minHeight),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 124,
+                          height: 124,
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient(),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryColor.withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: Offset(0, 8),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Bienvenido a AdoPets',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          child: Center(
+                            child: Text(
+                              usuario?.iniciales ?? '??',
+                              style: TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Gestiona las citas de tus mascotas de manera fácil y rápida.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                        SizedBox(height: 24),
+                        Text(
+                          '?Hola, ${usuario?.nombre ?? 'Usuario'}!',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
                           ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          usuario?.email ?? '',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        SizedBox(height: 24),
+                        if (usuario?.roles.isNotEmpty ?? false)
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: usuario!.roles.map((rol) {
+                              return Chip(
+                                label: Text(
+                                  rol,
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                backgroundColor: AppTheme.primaryLight
+                                    .withOpacity(0.3),
+                                side: BorderSide(color: AppTheme.primaryColor),
+                              );
+                            }).toList(),
+                          ),
+                        SizedBox(height: 32),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 30,
+                                offset: Offset(0, 15),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              ElevatedButton.icon(
-                                onPressed: () {
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryLight.withOpacity(
+                                    0.35,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.pets,
+                                  size: 32,
+                                  color: AppTheme.primaryColor,
+                                ),
+                              ),
+                              SizedBox(height: 20),
+                              Text(
+                                'Bienvenido a AdoPets',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Gestiona las citas de tus mascotas de manera f?cil y r?pida.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 15,
+                                  height: 1.4,
+                                ),
+                              ),
+                              SizedBox(height: 24),
+                              _HomeActionButtons(
+                                onMisMascotas: () {
                                   Navigator.pushNamed(context, '/mis-mascotas');
                                 },
-                                icon: const Icon(Icons.pets),
-                                label: const Text('Mis Mascotas'),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () {
+                                onSolicitarCita: () {
                                   Navigator.pushNamed(
                                     context,
                                     '/solicitar-cita',
                                   );
                                 },
-                                icon: const Icon(Icons.add_circle),
-                                label: const Text('Solicitar Cita'),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           );
         },
       ),
+    );
+  }
+}
+
+class _HomeActionButtons extends StatelessWidget {
+  const _HomeActionButtons({
+    required this.onMisMascotas,
+    required this.onSolicitarCita,
+  });
+
+  final VoidCallback onMisMascotas;
+  final VoidCallback onSolicitarCita;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = _HomeActionButton(
+      icon: Icons.pets,
+      label: 'Mis Mascotas',
+      onPressed: onMisMascotas,
+    );
+    final secondary = _HomeActionButton(
+      icon: Icons.add_circle,
+      label: 'Solicitar Cita',
+      onPressed: onSolicitarCita,
+      isOutlined: true,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 360;
+        if (isCompact) {
+          return Column(
+            children: [primary, const SizedBox(height: 12), secondary],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: primary),
+            const SizedBox(width: 12),
+            Expanded(child: secondary),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HomeActionButton extends StatelessWidget {
+  const _HomeActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.isOutlined = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final bool isOutlined;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ElevatedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      backgroundColor: isOutlined ? Colors.white : AppTheme.primaryColor,
+      foregroundColor: isOutlined ? AppTheme.primaryColor : Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isOutlined
+            ? const BorderSide(color: AppTheme.primaryColor, width: 1.5)
+            : BorderSide.none,
+      ),
+      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+    );
+
+    return ElevatedButton.icon(
+      style: style,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 20),
+      label: Text(label, overflow: TextOverflow.ellipsis),
     );
   }
 }

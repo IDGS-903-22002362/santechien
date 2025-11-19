@@ -47,5 +47,23 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        
+        <!-- Permitir abrir URLs en navegadores (necesario para PayPal) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        
+        <!-- Deep links para retorno de PayPal (opcional) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="adopets" />
+        </intent>
     </queries>
 </manifest>

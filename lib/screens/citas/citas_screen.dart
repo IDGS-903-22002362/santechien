@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cita_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../models/cita.dart';
 import '../../widgets/cita_card.dart';
 import '../../config/app_theme.dart';
@@ -36,15 +37,32 @@ class _CitasScreenState extends State<CitasScreen>
 
   Future<void> _cargarDatos() async {
     setState(() => _isLoading = true);
+
+    final authProvider = context.read<AuthProvider>();
+    final usuario = authProvider.usuario;
+
+    if (usuario == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     final citaProvider = context.read<CitaProvider>();
-    await citaProvider.cargarMisCitas();
+    await citaProvider.cargarMisCitas(usuarioId: usuario.id);
     await citaProvider.cargarMisMascotas();
     setState(() => _isLoading = false);
   }
 
   Future<void> _refrescar() async {
+    final authProvider = context.read<AuthProvider>();
+    final usuario = authProvider.usuario;
+
+    if (usuario == null) return;
+
     final citaProvider = context.read<CitaProvider>();
-    await citaProvider.refresh();
+    await citaProvider.cargarMisCitas(usuarioId: usuario.id);
+    await citaProvider.cargarMisMascotas();
   }
 
   @override

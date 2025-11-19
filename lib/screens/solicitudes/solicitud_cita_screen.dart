@@ -6,6 +6,7 @@ import '../../models/solicitud_cita.dart';
 import '../../services/mascota_service.dart';
 import '../../services/solicitud_cita_service.dart';
 import '../../providers/auth_provider.dart';
+import 'pagar_solicitud_screen.dart';
 
 /// Pantalla para solicitar cita veterinaria
 /// Según documentación: 03-SolicitudesCitasDigitales-API.md
@@ -38,10 +39,6 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
 
   // Campos del formulario según documentación API
   String _motivo = '';
-  String? _sintomas;
-  bool _esUrgente = false;
-  String _telefonoContacto = '';
-  String _emailContacto = '';
 
   @override
   void initState() {
@@ -104,7 +101,9 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
     _formKey.currentState!.save();
 
     final usuario = Provider.of<AuthProvider>(context, listen: false).usuario;
-    if (usuario == null) {
+
+    // ✅ 1. Validar que el usuario esté autenticado
+    if (usuario == null || usuario.id.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('❌ Error: Usuario no autenticado'),
@@ -114,10 +113,33 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
       return;
     }
 
-    if (_mascotaSeleccionada == null || _servicioSeleccionado == null) {
+    // ✅ 2. Validar que la mascota esté seleccionada
+    if (_mascotaSeleccionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('❌ Selecciona una mascota y un servicio'),
+          content: Text('❌ Selecciona una mascota'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // ✅ 3. Validar que el servicio esté seleccionado
+    if (_servicioSeleccionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Selecciona un servicio'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // ✅ 4. Validar que el motivo no esté vacío
+    if (_motivo.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Debes proporcionar un motivo de consulta'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -134,19 +156,24 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Mascota: ${_mascotaSeleccionada!.nombre}'),
+            Text('Especie: ${_mascotaSeleccionada!.especie}'),
+            if (_mascotaSeleccionada!.raza != null)
+              Text('Raza: ${_mascotaSeleccionada!.raza}'),
+            const SizedBox(height: 8),
             Text('Servicio: ${_servicioSeleccionado!.descripcion}'),
+            Text(
+              'Costo estimado: \$${_servicioSeleccionado!.precioSugerido.toStringAsFixed(2)}',
+            ),
+            const SizedBox(height: 8),
             Text(
               'Fecha: ${DateFormat('dd/MM/yyyy').format(_fechaSeleccionada)}',
             ),
             Text('Hora: ${_horaSeleccionada.format(context)}'),
-            if (_esUrgente)
-              const Text(
-                '⚠️ Solicitud URGENTE',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            Text(
+              'Duración estimada: ${_servicioSeleccionado!.duracionMinDefault} min',
+            ),
+            const SizedBox(height: 8),
+            Text('Motivo: $_motivo'),
             const SizedBox(height: 16),
             const Text(
               'Tu solicitud será revisada por el personal. '
@@ -173,7 +200,7 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
     setState(() => _isCreatingSolicitud = true);
 
     try {
-      // Crear fecha/hora combinada
+      // ✅ 5. Crear fecha/hora combinada en UTC (formato ISO 8601 con Z)
       final fechaHora = DateTime(
         _fechaSeleccionada.year,
         _fechaSeleccionada.month,
@@ -182,23 +209,64 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
         _horaSeleccionada.minute,
       );
 
-      // Formato de hora "HH:mm" según documentación
-      final horaPreferida =
-          '${_horaSeleccionada.hour.toString().padLeft(2, '0')}:'
-          '${_horaSeleccionada.minute.toString().padLeft(2, '0')}';
+      // Convertir a UTC y formato ISO 8601 estándar
+      final fechaHoraISO = fechaHora.toUtc().toIso8601String();
 
-      // Request según documentación API
+      // ✅ 6. Validar que todos los datos de mascota estén completos
+      if (_mascotaSeleccionada!.nombre.isEmpty) {
+        throw Exception('Nombre de mascota no puede estar vacío');
+      }
+      if (_mascotaSeleccionada!.especie.isEmpty) {
+        throw Exception('Especie de mascota no puede estar vacía');
+      }
+
+      // ✅ 7. Validar que todos los datos de servicio estén completos
+      if (_servicioSeleccionado!.descripcion.isEmpty) {
+        throw Exception('Descripción del servicio no puede estar vacía');
+      }
+      if (_servicioSeleccionado!.duracionMinDefault <= 0) {
+        throw Exception('Duración del servicio debe ser mayor a 0');
+      }
+      if (_servicioSeleccionado!.precioSugerido < 0) {
+        throw Exception('Precio del servicio no puede ser negativo');
+      }
+
+      print('\n🔷 === CREANDO SOLICITUD DE CITA ===');
+      print('📋 Datos del usuario:');
+      print('   ID: ${usuario.id}');
+      print('   Nombre: ${usuario.nombre}');
+      print('   Email: ${usuario.email}');
+      print('\n📋 Datos de la mascota:');
+      print('   ID: ${_mascotaSeleccionada!.id}');
+      print('   Nombre: ${_mascotaSeleccionada!.nombre}');
+      print('   Especie: ${_mascotaSeleccionada!.especie}');
+      print('   Raza: ${_mascotaSeleccionada!.raza ?? "N/A"}');
+      print('\n📋 Datos del servicio:');
+      print('   ID: ${_servicioSeleccionado!.id}');
+      print('   Descripción: ${_servicioSeleccionado!.descripcion}');
+      print('   Duración: ${_servicioSeleccionado!.duracionMinDefault} min');
+      print('   Costo: \$${_servicioSeleccionado!.precioSugerido}');
+      print('\n📋 Datos de la cita:');
+      print('   Fecha/Hora solicitada: $fechaHoraISO');
+      print('   Motivo: $_motivo');
+
+      // ✅ 8. Crear request con TODOS los campos requeridos
       final request = CrearSolicitudCitaRequest(
+        solicitanteId: usuario.id,
         mascotaId: _mascotaSeleccionada!.id,
-        tipoServicioId: _servicioSeleccionado!.id,
-        fechaPreferida: fechaHora,
-        horaPreferida: horaPreferida,
-        motivo: _motivo,
-        sintomas: _sintomas,
-        esUrgente: _esUrgente,
-        telefonoContacto: _telefonoContacto,
-        emailContacto: _emailContacto,
+        nombreMascota: _mascotaSeleccionada!.nombre,
+        especieMascota: _mascotaSeleccionada!.especie,
+        razaMascota: _mascotaSeleccionada!.raza,
+        servicioId: _servicioSeleccionado!.id,
+        descripcionServicio: _servicioSeleccionado!.descripcion,
+        motivoConsulta: _motivo.trim(),
+        fechaHoraSolicitada: fechaHoraISO,
+        duracionEstimadaMin: _servicioSeleccionado!.duracionMinDefault,
+        costoEstimado: _servicioSeleccionado!.precioSugerido,
       );
+
+      print('\n📤 Request JSON a enviar:');
+      print(request.toJson());
 
       final response = await _solicitudService.crearSolicitud(request);
 
@@ -206,22 +274,32 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
 
       setState(() => _isCreatingSolicitud = false);
 
-      if (response.success) {
+      if (response.success && response.data != null) {
+        final solicitudCreada = response.data!;
+
+        print('✅ Solicitud creada exitosamente:');
+        print('   ID: ${solicitudCreada.id}');
+        print('   Número: ${solicitudCreada.numeroSolicitud}');
+        print('   Estado: ${solicitudCreada.estadoNombre}');
+        print('   Costo estimado: \$${solicitudCreada.costoEstimado}');
+        print('   Monto anticipo: \$${solicitudCreada.montoAnticipo}');
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _esUrgente
-                  ? '✅ ¡Solicitud urgente enviada!\n'
-                        'El personal la revisará con prioridad y te contactará pronto.'
-                  : '✅ ¡Solicitud creada exitosamente!\n'
-                        'El personal la revisará y te contactará para confirmar tu cita.',
-            ),
+          const SnackBar(
+            content: Text('✅ ¡Solicitud creada! Procede al pago del anticipo'),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 5),
+            duration: Duration(seconds: 2),
           ),
         );
 
-        Navigator.pop(context); // Volver a pantalla anterior
+        // ✅ Redirigir automáticamente a la pantalla de pago
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                PagarSolicitudScreen(solicitud: solicitudCreada),
+          ),
+        );
       } else {
         throw Exception(response.message);
       }
@@ -295,13 +373,6 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final usuario = Provider.of<AuthProvider>(context).usuario;
-
-    // Pre-llenar email del usuario si está disponible
-    if (_emailContacto.isEmpty && usuario != null) {
-      _emailContacto = usuario.email;
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Solicitar Cita'),
@@ -538,7 +609,7 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Motivo y síntomas
+                    // Motivo de la consulta
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -546,7 +617,7 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              '4. Detalles de la consulta',
+                              '4. Motivo de la consulta',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -557,105 +628,22 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
                               decoration: const InputDecoration(
                                 labelText: 'Motivo de consulta *',
                                 hintText:
-                                    'Ej: Revisión general, vacunación, chequeo',
+                                    'Ej: Revisión general, vacunación, esterilización programada',
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.edit),
                               ),
-                              maxLines: 2,
+                              maxLines: 3,
                               maxLength: 500,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'El motivo es requerido';
                                 }
+                                if (value.trim().length < 10) {
+                                  return 'El motivo debe tener al menos 10 caracteres';
+                                }
                                 return null;
                               },
                               onSaved: (value) => _motivo = value!,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Síntomas (opcional)',
-                                hintText:
-                                    'Describe los síntomas que presenta la mascota',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.medical_information),
-                              ),
-                              maxLines: 3,
-                              onSaved: (value) => _sintomas = value,
-                            ),
-                            const SizedBox(height: 16),
-                            CheckboxListTile(
-                              value: _esUrgente,
-                              onChanged: (value) {
-                                setState(() {
-                                  _esUrgente = value ?? false;
-                                });
-                              },
-                              title: const Text('¿Es urgente?'),
-                              subtitle: const Text(
-                                'Las solicitudes urgentes se priorizan',
-                              ),
-                              secondary: Icon(
-                                Icons.priority_high,
-                                color: _esUrgente ? Colors.red : Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Datos de contacto
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              '5. Información de contacto',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Teléfono de contacto *',
-                                hintText: '+52-555-123-4567',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.phone),
-                              ),
-                              keyboardType: TextInputType.phone,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'El teléfono es requerido';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _telefonoContacto = value!,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              initialValue: _emailContacto,
-                              decoration: const InputDecoration(
-                                labelText: 'Email de contacto *',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.email),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'El email es requerido';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Email inválido';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _emailContacto = value!,
                             ),
                           ],
                         ),
@@ -688,9 +676,7 @@ class _SolicitudCitaScreenState extends State<SolicitudCitaScreen> {
                           style: const TextStyle(fontSize: 16),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _esUrgente
-                              ? Colors.red
-                              : Colors.blue,
+                          backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
                         ),
                       ),

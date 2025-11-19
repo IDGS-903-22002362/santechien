@@ -120,14 +120,22 @@ class Pago extends Equatable {
   /// Crear desde JSON
   factory Pago.fromJson(Map<String, dynamic> json) {
     return Pago(
-      id: json['id'] as String,
-      folioPago: json['folioPago'] as String,
-      fecha: DateTime.parse(json['fecha'] as String),
-      monto: (json['monto'] as num).toDouble(),
-      metodoPago: MetodoPago.fromString(json['metodoPago'] as String),
-      tipoPago: TipoPago.fromString(json['tipoPago'] as String),
-      status: PagoStatus.fromString(json['status'] as String),
-      conceptoPago: json['conceptoPago'] as String,
+      id: json['id'] as String? ?? '',
+      folioPago: json['folioPago'] as String? ?? '',
+      fecha: json['fecha'] != null
+          ? DateTime.parse(json['fecha'] as String)
+          : DateTime.now(),
+      monto: (json['monto'] as num?)?.toDouble() ?? 0.0,
+      metodoPago: json['metodoPago'] != null
+          ? MetodoPago.fromString(json['metodoPago'] as String)
+          : MetodoPago.paypal,
+      tipoPago: json['tipoPago'] != null
+          ? TipoPago.fromString(json['tipoPago'] as String)
+          : TipoPago.anticipo,
+      status: json['status'] != null
+          ? PagoStatus.fromString(json['status'] as String)
+          : PagoStatus.pendiente,
+      conceptoPago: json['conceptoPago'] as String? ?? 'Pago',
       referencia: json['referencia'] as String?,
       citaId: json['citaId'] as String?,
       usuarioId: json['usuarioId'] as String?,
@@ -222,28 +230,58 @@ class PayPalOrderResponse extends Equatable {
 
 /// Request para crear orden de PayPal
 class CrearOrdenPayPalRequest {
+  // Para pagar CITAS ya creadas
   final String? citaId;
+
+  // Para pagar SOLICITUDES de cita (anticipo del 50%)
+  final String? solicitudCitaId;
+  final String? usuarioId;
+  final bool? esAnticipo;
+  final double? montoTotal;
+  final String? returnUrl;
+  final String? cancelUrl;
+
+  // Campos comunes
   final double monto;
-  final TipoPago tipoPago;
   final String conceptoPago;
   final String? descripcionDetallada;
 
   const CrearOrdenPayPalRequest({
+    // Para citas
     this.citaId,
+
+    // Para solicitudes
+    this.solicitudCitaId,
+    this.usuarioId,
+    this.esAnticipo,
+    this.montoTotal,
+    this.returnUrl,
+    this.cancelUrl,
+
+    // Comunes
     required this.monto,
-    required this.tipoPago,
     required this.conceptoPago,
     this.descripcionDetallada,
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'citaId': citaId,
+    final json = <String, dynamic>{
       'monto': monto,
-      'tipoPago': tipoPago.value,
       'conceptoPago': conceptoPago,
-      'descripcionDetallada': descripcionDetallada,
     };
+
+    // Agregar solo campos no nulos
+    if (citaId != null) json['citaId'] = citaId;
+    if (solicitudCitaId != null) json['solicitudCitaId'] = solicitudCitaId;
+    if (usuarioId != null) json['usuarioId'] = usuarioId;
+    if (esAnticipo != null) json['esAnticipo'] = esAnticipo;
+    if (montoTotal != null) json['montoTotal'] = montoTotal;
+    if (returnUrl != null) json['returnUrl'] = returnUrl;
+    if (cancelUrl != null) json['cancelUrl'] = cancelUrl;
+    if (descripcionDetallada != null)
+      json['descripcionDetallada'] = descripcionDetallada;
+
+    return json;
   }
 }
 

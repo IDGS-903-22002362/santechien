@@ -47,11 +47,11 @@ class Usuario extends Equatable {
   /// Crear desde JSON
   factory Usuario.fromJson(Map<String, dynamic> json) {
     return Usuario(
-      id: json['id'] as String,
-      nombre: json['nombre'] as String,
+      id: json['id'] as String? ?? '',
+      nombre: json['nombre'] as String? ?? '',
       apellidoPaterno: json['apellidoPaterno'] as String?,
       apellidoMaterno: json['apellidoMaterno'] as String?,
-      email: json['email'] as String,
+      email: json['email'] as String? ?? '',
       telefono: json['telefono'] as String?,
       roles:
           (json['roles'] as List<dynamic>?)
