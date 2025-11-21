@@ -1,11 +1,77 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../services/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 /// Pantalla principal (Home)
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  StreamSubscription<RemoteMessage>? _notificationSubscription;
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _setupNotificationListener();
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _setupNotificationListener() {
+    // Escuchar notificaciones en foreground y cuando se toca una notificación
+    _notificationSubscription = _notificationService.notificationStream.listen((
+      message,
+    ) {
+      print('📬 Nueva notificación recibida en HomeScreen');
+
+      // Mostrar snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message.notification?.body ?? 'Nueva notificación'),
+            action: SnackBarAction(
+              label: 'Ver',
+              onPressed: () => _handleNotificationTap(message),
+            ),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    });
+  }
+
+  void _handleNotificationTap(RemoteMessage message) {
+    final tipo = message.data['tipo'];
+
+    print('👆 Navegando según tipo: $tipo');
+
+    switch (tipo) {
+      case 'recordatorio_cita':
+      case 'cita_confirmada':
+      case 'cita_cancelada':
+        // Navegar a la pantalla de citas
+        if (mounted) {
+          Navigator.pushNamed(context, '/citas');
+        }
+        break;
+
+      default:
+        print('Tipo de notificación no manejado: $tipo');
+    }
+  }
 
   Future<void> _handleSignOut(BuildContext context) async {
     final shouldSignOut = await showDialog<bool>(

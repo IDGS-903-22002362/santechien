@@ -427,6 +427,82 @@ class ApiService {
         return 'Error en la solicitud ($statusCode)';
     }
   }
+
+  /// ======= NOTIFICACIONES PUSH - DISPOSITIVOS =======
+
+  /// Registrar dispositivo en el backend
+  Future<ApiResponse<Map<String, dynamic>>> registrarDispositivo({
+    required String fcmToken,
+    required int plataforma, // 2 = Android, 3 = iOS
+    String appVersion = '1.0.0',
+  }) async {
+    print('📱 Registrando dispositivo en backend...');
+    print('   Token FCM: ${fcmToken.substring(0, 20)}...');
+    print('   Plataforma: $plataforma');
+
+    return await post<Map<String, dynamic>>(
+      '/dispositivos',
+      body: {
+        'token': fcmToken,
+        'plataforma': plataforma,
+        'appVersion': appVersion,
+      },
+      fromJson: (json) => json as Map<String, dynamic>,
+      requiresAuth: true,
+    );
+  }
+
+  /// Obtener dispositivos registrados
+  Future<ApiResponse<List<dynamic>>> obtenerDispositivos() async {
+    print('📱 Obteniendo dispositivos registrados...');
+
+    final response = await get<Map<String, dynamic>>(
+      '/dispositivos',
+      fromJson: (json) => json as Map<String, dynamic>,
+      requiresAuth: true,
+    );
+
+    if (response.success && response.data != null) {
+      final dispositivos = response.data!['data'] as List<dynamic>? ?? [];
+      return ApiResponse<List<dynamic>>(
+        success: true,
+        message: response.message,
+        data: dispositivos,
+      );
+    }
+
+    return ApiResponse<List<dynamic>>(
+      success: false,
+      message: response.message,
+      errors: response.errors,
+    );
+  }
+
+  /// Deshabilitar dispositivo
+  Future<ApiResponse<void>> deshabilitarDispositivo(
+    String dispositivoId,
+  ) async {
+    print('📱 Deshabilitando dispositivo: $dispositivoId');
+
+    return await put<void>(
+      '/dispositivos/$dispositivoId/deshabilitar',
+      requiresAuth: true,
+    );
+  }
+
+  /// Actualizar token FCM de un dispositivo
+  Future<ApiResponse<void>> actualizarTokenFCM({
+    required String dispositivoId,
+    required String nuevoToken,
+  }) async {
+    print('🔄 Actualizando token FCM del dispositivo: $dispositivoId');
+
+    return await put<void>(
+      '/dispositivos/$dispositivoId',
+      body: {'token': nuevoToken},
+      requiresAuth: true,
+    );
+  }
 }
 
 class TimeoutException implements Exception {

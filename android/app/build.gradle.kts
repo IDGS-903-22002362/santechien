@@ -9,12 +9,14 @@ plugins {
 
 android {
     namespace = "com.adopets.app_movil"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Habilitar core library desugaring para flutter_local_notifications
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -26,10 +28,13 @@ android {
         applicationId = "com.adopets.app_movil"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = flutter.minSdkVersion  // Mínimo para FCM
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Multidex para evitar problemas con Firebase
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -46,12 +51,19 @@ flutter {
 }
 
 dependencies {
+    // Core library desugaring para soporte de APIs modernas en versiones antiguas de Android
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
     // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     
     // Add the dependencies for Firebase products you want to use
     // When using the BoM, don't specify versions in Firebase dependencies
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
+    
+    // Multidex support
+    implementation("androidx.multidex:multidex:2.0.1")
     
     // Add the dependencies for any other desired Firebase products
     // https://firebase.google.com/docs/android/setup#available-libraries

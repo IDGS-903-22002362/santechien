@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'firebase_options.dart';
@@ -17,6 +18,16 @@ import 'screens/solicitudes/mis_solicitudes_screen.dart';
 import 'screens/debug/debug_auth_screen.dart';
 import 'utils/ui_logger.dart';
 import 'services/storage_service.dart';
+import 'services/notification_service.dart';
+
+// Background message handler (debe estar fuera de la clase main)
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print('🔔 Background message: ${message.messageId}');
+  print('   Título: ${message.notification?.title}');
+  print('   Cuerpo: ${message.notification?.body}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +35,14 @@ void main() async {
   // Inicializar Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Configurar background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   // Inicializar Storage Service
   await StorageService().init();
+
+  // Inicializar Notification Service
+  await NotificationService().initialize();
 
   runApp(const AdoPetsApp());
 }
