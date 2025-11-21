@@ -58,7 +58,7 @@ class SolicitudCitaService {
     }
   }
 
-  /// Obtener solicitud por ID
+  /// Obtener solicitud por ID (respuesta básica)
   Future<ApiResponse<SolicitudCita>> obtenerSolicitudPorId(
     String solicitudId,
   ) async {
@@ -73,6 +73,36 @@ class SolicitudCitaService {
       return ApiResponse<SolicitudCita>(
         success: false,
         message: 'Error al obtener la solicitud',
+        errors: [e.toString()],
+      );
+    }
+  }
+
+  /// Obtener detalles completos de la solicitud por ID
+  /// Incluye información de cita confirmada y pago de anticipo
+  /// Endpoint: GET /api/solicitudescitasdigitales/{solicitudId}
+  Future<ApiResponse<SolicitudCitaDetallada>> obtenerSolicitudDetalladaPorId(
+    String solicitudId,
+  ) async {
+    try {
+      print('🔍 Obteniendo solicitud detallada: $solicitudId');
+      final response = await _apiService.get<SolicitudCitaDetallada>(
+        '$_basePath/$solicitudId',
+        fromJson: (data) {
+          print('📦 Response data recibido:');
+          print('   keys: ${data.keys}');
+          return SolicitudCitaDetallada.fromJson(data);
+        },
+      );
+
+      print('✅ Solicitud detallada obtenida: ${response.success}');
+      return response;
+    } catch (e, stackTrace) {
+      print('❌ Error al obtener solicitud detallada: $e');
+      print('   Stack trace: $stackTrace');
+      return ApiResponse<SolicitudCitaDetallada>(
+        success: false,
+        message: 'Error al obtener los detalles de la solicitud',
         errors: [e.toString()],
       );
     }

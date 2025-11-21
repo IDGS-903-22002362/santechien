@@ -279,6 +279,8 @@ class _CitasScreenState extends State<CitasScreen>
             backgroundColor: Colors.green,
           ),
         );
+        // Refrescar la lista de citas
+        await _refrescar();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/cita_provider.dart';
-import '../../models/cita.dart';
+import '../../models/solicitud_cita.dart';
 import '../../config/app_theme.dart';
-import 'pagar_cita_screen.dart';
 
 /// Pantalla de detalle de una cita
+/// Muestra información completa de la solicitud de cita confirmada
 class CitaDetalleScreen extends StatefulWidget {
-  final String citaId;
+  final String citaId; // En realidad es el solicitudId
 
   const CitaDetalleScreen({super.key, required this.citaId});
 
@@ -17,25 +17,36 @@ class CitaDetalleScreen extends StatefulWidget {
 }
 
 class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
-  Cita? _cita;
+  SolicitudCitaDetallada? _solicitudDetalle;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _cargarCita();
+    _cargarDetalleSolicitud();
   }
 
-  Future<void> _cargarCita() async {
+  Future<void> _cargarDetalleSolicitud() async {
     setState(() => _isLoading = true);
+
     final citaProvider = context.read<CitaProvider>();
-    final cita = await citaProvider.obtenerCitaPorId(widget.citaId);
+    print('🔍 Cargando detalles de solicitud: ${widget.citaId}');
+
+    final solicitudDetalle = await citaProvider.obtenerSolicitudDetallePorId(
+      widget.citaId,
+    );
 
     if (mounted) {
       setState(() {
-        _cita = cita;
+        _solicitudDetalle = solicitudDetalle;
         _isLoading = false;
       });
+
+      if (solicitudDetalle != null) {
+        print('✅ Detalles cargados: ${solicitudDetalle.numeroSolicitud}');
+      } else {
+        print('❌ No se pudo cargar los detalles');
+      }
     }
   }
 
@@ -45,7 +56,7 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
       appBar: AppBar(title: const Text('Detalle de Cita')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _cita == null
+          : _solicitudDetalle == null
           ? _buildError()
           : _buildDetalle(),
     );
@@ -64,7 +75,7 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: _cargarCita,
+            onPressed: _cargarDetalleSolicitud,
             icon: const Icon(Icons.refresh),
             label: const Text('Reintentar'),
           ),
@@ -74,6 +85,8 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
   }
 
   Widget _buildDetalle() {
+    final solicitud = _solicitudDetalle!;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -81,30 +94,23 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
         children: [
           _buildEstadoCard(),
           const SizedBox(height: 16),
+          _buildInformacionSolicitudCard(),
+          const SizedBox(height: 16),
           _buildInformacionCard(),
           const SizedBox(height: 16),
           _buildMascotaCard(),
           const SizedBox(height: 16),
-          _buildVeterinarioCard(),
-          if (_cita!.motivo != null) ...[
+          if (solicitud.cita != null) ...[
+            _buildCitaConfirmadaCard(),
             const SizedBox(height: 16),
-            _buildMotivoCard(),
           ],
-          if (_cita!.notas != null) ...[
+          if (solicitud.pagoAnticipo != null) ...[
+            _buildPagoAnticipoCard(),
             const SizedBox(height: 16),
-            _buildNotasCard(),
           ],
-          if (_cita!.diagnostico != null) ...[
+          if (solicitud.observaciones != null) ...[
+            _buildObservacionesCard(),
             const SizedBox(height: 16),
-            _buildDiagnosticoCard(),
-          ],
-          if (_cita!.requiereAnticipo) ...[
-            const SizedBox(height: 16),
-            _buildPagoCard(),
-          ],
-          if (_cita!.puedeCancelarse) ...[
-            const SizedBox(height: 24),
-            _buildBotonCancelar(),
           ],
           const SizedBox(height: 24),
         ],
@@ -113,41 +119,44 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
   }
 
   Widget _buildEstadoCard() {
+    final solicitud = _solicitudDetalle!;
     Color color;
     IconData icon;
     String descripcion;
 
-    switch (_cita!.status) {
-      case CitaStatus.programada:
-        color = Colors.blue;
-        icon = Icons.schedule;
-        descripcion = 'Tu cita ha sido programada';
-        break;
-      case CitaStatus.confirmada:
+    // Usar el estado de la solicitud
+    final estadoNombre = solicitud.estadoNombre;
+
+    switch (estadoNombre.toLowerCase()) {
+      case 'confirmada':
         color = Colors.green;
         icon = Icons.check_circle;
         descripcion = 'Tu cita ha sido confirmada';
         break;
-      case CitaStatus.enProceso:
+      case 'pendiente pago':
         color = Colors.orange;
+        icon = Icons.payment;
+        descripcion = 'Pendiente de pago';
+        break;
+      case 'pagada - pendiente confirmación':
+        color = Colors.blue;
         icon = Icons.pending;
-        descripcion = 'Tu cita está en proceso';
+        descripcion = 'Pago completado, esperando confirmación';
         break;
-      case CitaStatus.completada:
-        color = Colors.purple;
-        icon = Icons.done_all;
-        descripcion = 'Tu cita ha sido completada';
-        break;
-      case CitaStatus.cancelada:
+      case 'cancelada':
         color = Colors.red;
         icon = Icons.cancel;
         descripcion = 'Esta cita fue cancelada';
         break;
-      case CitaStatus.noAsistio:
-        color = Colors.grey;
-        icon = Icons.event_busy;
-        descripcion = 'No asististe a esta cita';
+      case 'rechazada':
+        color = Colors.red;
+        icon = Icons.block;
+        descripcion = 'Esta solicitud fue rechazada';
         break;
+      default:
+        color = Colors.blue;
+        icon = Icons.schedule;
+        descripcion = 'Solicitud en proceso';
     }
 
     return Card(
@@ -163,7 +172,7 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _cita!.status.label,
+                    estadoNombre,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -187,7 +196,54 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
     );
   }
 
+  Widget _buildInformacionSolicitudCard() {
+    final solicitud = _solicitudDetalle!;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Información de la Solicitud',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.confirmation_number,
+              'Número de Solicitud',
+              solicitud.numeroSolicitud,
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.calendar_today,
+              'Fecha de Solicitud',
+              DateFormat(
+                'd MMMM yyyy, HH:mm',
+                'es',
+              ).format(solicitud.fechaSolicitud),
+            ),
+            if (solicitud.fechaConfirmacion != null) ...[
+              const Divider(height: 24),
+              _buildInfoRow(
+                Icons.check_circle,
+                'Fecha de Confirmación',
+                DateFormat(
+                  'd MMMM yyyy, HH:mm',
+                  'es',
+                ).format(solicitud.fechaConfirmacion!),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInformacionCard() {
+    final solicitud = _solicitudDetalle!;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -202,34 +258,47 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
             _buildInfoRow(
               Icons.calendar_today,
               'Fecha',
-              DateFormat('EEEE, d MMMM yyyy', 'es').format(_cita!.fechaHora),
+              DateFormat(
+                'EEEE, d MMMM yyyy',
+                'es',
+              ).format(solicitud.fechaHoraSolicitada),
             ),
             const Divider(height: 24),
             _buildInfoRow(
               Icons.access_time,
               'Hora',
-              DateFormat('HH:mm', 'es').format(_cita!.fechaHora),
+              DateFormat('HH:mm', 'es').format(solicitud.fechaHoraSolicitada),
             ),
             const Divider(height: 24),
             _buildInfoRow(
               Icons.timer,
-              'Duración',
-              '${_cita!.duracionMinutos} minutos',
+              'Duración Estimada',
+              '${solicitud.duracionEstimadaMin} minutos',
             ),
             const Divider(height: 24),
             _buildInfoRow(
               Icons.medical_services,
-              'Tipo de Consulta',
-              _cita!.tipoConsulta,
+              'Servicio',
+              solicitud.descripcionServicio,
             ),
-            if (_cita!.numeroTicket != null) ...[
-              const Divider(height: 24),
-              _buildInfoRow(
-                Icons.confirmation_number,
-                'Número de Ticket',
-                _cita!.numeroTicket!,
-              ),
-            ],
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.description,
+              'Motivo de Consulta',
+              solicitud.motivoConsulta,
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.attach_money,
+              'Costo Estimado',
+              '\$${solicitud.costoEstimado.toStringAsFixed(2)} MXN',
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.payment,
+              'Anticipo (50%)',
+              '\$${solicitud.montoAnticipo.toStringAsFixed(2)} MXN',
+            ),
           ],
         ),
       ),
@@ -237,6 +306,8 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
   }
 
   Widget _buildMascotaCard() {
+    final solicitud = _solicitudDetalle!;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -255,8 +326,13 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              _cita!.mascotaNombre ?? 'N/A',
-              style: const TextStyle(fontSize: 16),
+              solicitud.nombreMascota,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${solicitud.especieMascota}${solicitud.razaMascota != null ? ' - ${solicitud.razaMascota}' : ''}',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -264,8 +340,11 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
     );
   }
 
-  Widget _buildVeterinarioCard() {
+  Widget _buildCitaConfirmadaCard() {
+    final cita = _solicitudDetalle!.cita!;
+
     return Card(
+      color: Colors.green.shade50,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -273,30 +352,49 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.person, color: AppTheme.primaryColor),
+                Icon(Icons.event_available, color: Colors.green.shade700),
                 const SizedBox(width: 8),
                 const Text(
-                  'Veterinario',
+                  'Cita Confirmada',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              _cita!.veterinarioNombre ?? 'N/A',
-              style: const TextStyle(fontSize: 16),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.calendar_today,
+              'Fecha y Hora de Inicio',
+              DateFormat(
+                'EEEE, d MMMM yyyy - HH:mm',
+                'es',
+              ).format(cita.fechaHoraInicio),
             ),
-            if (_cita!.salaNombre != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.meeting_room, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Text(
-                    _cita!.salaNombre!,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.access_time,
+              'Hora de Fin',
+              DateFormat('HH:mm', 'es').format(cita.fechaHoraFin),
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.check_circle,
+              'Estado de la Cita',
+              cita.estadoNombre,
+            ),
+            if (cita.veterinario != null) ...[
+              const Divider(height: 24),
+              _buildInfoRow(
+                Icons.person,
+                'Veterinario Asignado',
+                cita.veterinario!.nombre,
+              ),
+            ],
+            if (cita.sala != null) ...[
+              const Divider(height: 24),
+              _buildInfoRow(
+                Icons.meeting_room,
+                'Sala Asignada',
+                cita.sala!.nombre,
               ),
             ],
           ],
@@ -305,8 +403,11 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
     );
   }
 
-  Widget _buildMotivoCard() {
+  Widget _buildPagoAnticipoCard() {
+    final pago = _solicitudDetalle!.pagoAnticipo!;
+
     return Card(
+      color: Colors.blue.shade50,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -314,23 +415,61 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.description, color: AppTheme.primaryColor),
+                Icon(Icons.payment, color: Colors.blue.shade700),
                 const SizedBox(width: 8),
                 const Text(
-                  'Motivo de la Consulta',
+                  'Información de Pago',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(_cita!.motivo!, style: const TextStyle(fontSize: 14)),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.confirmation_number,
+              'Número de Pago',
+              pago.numeroPago,
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.attach_money,
+              'Monto',
+              '\$${pago.monto.toStringAsFixed(2)} ${pago.moneda}',
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.credit_card,
+              'Método de Pago',
+              pago.metodoNombre,
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.check_circle,
+              'Estado del Pago',
+              pago.estadoNombre,
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
+              Icons.calendar_today,
+              'Fecha de Pago',
+              DateFormat('d MMMM yyyy, HH:mm', 'es').format(pago.fechaPago),
+            ),
+            if (pago.payPalOrderId != null) ...[
+              const Divider(height: 24),
+              _buildInfoRow(
+                Icons.receipt,
+                'PayPal Order ID',
+                pago.payPalOrderId!,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNotasCard() {
+  Widget _buildObservacionesCard() {
+    final solicitud = _solicitudDetalle!;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -342,118 +481,17 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
                 Icon(Icons.note, color: AppTheme.primaryColor),
                 const SizedBox(width: 8),
                 const Text(
-                  'Notas',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(_cita!.notas!, style: const TextStyle(fontSize: 14)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDiagnosticoCard() {
-    return Card(
-      color: Colors.green.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.assignment, color: Colors.green.shade700),
-                const SizedBox(width: 8),
-                const Text(
-                  'Diagnóstico',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(_cita!.diagnostico!, style: const TextStyle(fontSize: 14)),
-            if (_cita!.tratamiento != null) ...[
-              const Divider(height: 24),
-              const Text(
-                'Tratamiento',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Text(_cita!.tratamiento!, style: const TextStyle(fontSize: 14)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPagoCard() {
-    return Card(
-      color: Colors.orange.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.payment, color: Colors.orange.shade700),
-                const SizedBox(width: 8),
-                const Text(
-                  'Información de Pago',
+                  'Observaciones',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
-              'Costo total: \$${_cita!.costoTotal?.toStringAsFixed(2) ?? '0.00'} MXN',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Anticipo requerido (50%): \$${_cita!.calculoAnticipo?.toStringAsFixed(2) ?? '0.00'} MXN',
+              solicitud.observaciones!,
               style: const TextStyle(fontSize: 14),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PagarCitaScreen(cita: _cita!),
-                    ),
-                  ).then((_) => _cargarCita());
-                },
-                icon: const Icon(Icons.payment),
-                label: const Text('Pagar Ahora'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange.shade700,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBotonCancelar() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _mostrarDialogoCancelar,
-        icon: const Icon(Icons.cancel),
-        label: const Text('Cancelar Cita'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.red,
-          side: const BorderSide(color: Colors.red),
         ),
       ),
     );
@@ -486,96 +524,5 @@ class _CitaDetalleScreenState extends State<CitaDetalleScreen> {
         ),
       ],
     );
-  }
-
-  void _mostrarDialogoCancelar() {
-    final motivoController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancelar Cita'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '¿Estás seguro de que deseas cancelar esta cita?',
-              style: TextStyle(color: Colors.grey[700]),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: motivoController,
-              decoration: const InputDecoration(
-                labelText: 'Motivo de cancelación',
-                hintText: 'Ingresa el motivo',
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Volver'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final motivo = motivoController.text.trim();
-              if (motivo.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Debes ingresar un motivo de cancelación'),
-                  ),
-                );
-                return;
-              }
-
-              Navigator.pop(context);
-              await _cancelarCita(motivo);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Cancelar Cita'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _cancelarCita(String motivo) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final citaProvider = context.read<CitaProvider>();
-    final exito = await citaProvider.cancelarCita(
-      citaId: _cita!.id,
-      motivo: motivo,
-    );
-
-    if (mounted) {
-      Navigator.pop(context); // Cerrar loading
-
-      if (exito) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cita cancelada exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context); // Volver a la lista
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              citaProvider.errorMessage ?? 'Error al cancelar la cita',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 }

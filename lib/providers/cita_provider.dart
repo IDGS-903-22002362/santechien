@@ -31,16 +31,16 @@ class CitaProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// Obtener citas del propietario actual (desde solicitudes confirmadas)
+  /// Obtener citas del propietario actual (desde solicitudes)
   /// Usa GET /api/v1/SolicitudesCitasDigitales/usuario/{usuarioId}
-  /// Filtra solo las confirmadas (estado = 5)
+  /// Carga TODAS las solicitudes para poder filtrarlas por estado
   Future<bool> cargarMisCitas({String? usuarioId}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      print('📅 Cargando mis citas desde solicitudes confirmadas...');
+      print('📅 Cargando mis citas desde solicitudes...');
 
       if (usuarioId == null || usuarioId.isEmpty) {
         throw Exception('Usuario no autenticado');
@@ -54,22 +54,39 @@ class CitaProvider with ChangeNotifier {
       print('   data count: ${response.data?.length ?? 0}');
 
       if (response.success && response.data != null) {
-        // Filtrar solo las solicitudes CONFIRMADAS (estado = 5)
-        _solicitudesConfirmadas = response.data!
-            .where(
-              (solicitud) => solicitud.estado == SolicitudEstado.confirmada,
-            )
-            .toList();
+        // Guardar TODAS las solicitudes
+        _solicitudesConfirmadas = response.data!;
 
-        print('✅ Solicitudes confirmadas: ${_solicitudesConfirmadas.length}');
+        print('✅ Total solicitudes: ${_solicitudesConfirmadas.length}');
 
-        // Convertir solicitudes confirmadas a Citas para mantener compatibilidad
+        // Convertir TODAS las solicitudes a Citas
+        // IMPORTANTE: Guardamos el ID de la solicitud en el campo 'id' para poder
+        // recuperar los detalles completos posteriormente
         _citas = _solicitudesConfirmadas.map((solicitud) {
+          // Mapear el estado de la solicitud a CitaStatus
+          CitaStatus status;
+          switch (solicitud.estado) {
+            case SolicitudEstado.confirmada:
+              status = CitaStatus.confirmada;
+              break;
+            case SolicitudEstado.cancelada:
+              status = CitaStatus.cancelada;
+              break;
+            case SolicitudEstado.rechazada:
+              status = CitaStatus.cancelada; // Rechazada = Cancelada
+              break;
+            case SolicitudEstado.expirada:
+              status = CitaStatus.cancelada; // Expirada = Cancelada
+              break;
+            default:
+              status = CitaStatus.programada;
+          }
+
           return Cita(
-            id: solicitud.citaId ?? solicitud.id,
+            id: solicitud.id, // ✅ ID de la solicitud
             fechaHora: solicitud.fechaHoraSolicitada,
             duracionMinutos: solicitud.duracionEstimadaMin,
-            status: CitaStatus.confirmada,
+            status: status,
             tipoConsulta: solicitud.descripcionServicio,
             motivo: solicitud.motivoConsulta,
             mascotaId: solicitud.mascotaId,
@@ -78,12 +95,18 @@ class CitaProvider with ChangeNotifier {
             costoTotal: solicitud.costoEstimado,
             montoAnticipo: solicitud.montoAnticipo,
             requierePago: false,
-            pagoCompletado: true,
+            pagoCompletado: solicitud.pagoCompletado,
           );
         }).toList();
 
         _citas.sort((a, b) => b.fechaHora.compareTo(a.fechaHora));
         print('✅ Citas cargadas: ${_citas.length}');
+        print(
+          '   - Confirmadas: ${_citas.where((c) => c.status == CitaStatus.confirmada).length}',
+        );
+        print(
+          '   - Canceladas: ${_citas.where((c) => c.status == CitaStatus.cancelada).length}',
+        );
 
         _isLoading = false;
         notifyListeners();
@@ -109,7 +132,7 @@ class CitaProvider with ChangeNotifier {
     }
   }
 
-  /// Obtener citas programadas (futuras)
+  /// Obtener citas programadas (futuras) - SOLO confirmadas y en el futuro
   List<Cita> get citasProgramadas {
     final ahora = DateTime.now();
     return _citas
@@ -122,19 +145,20 @@ class CitaProvider with ChangeNotifier {
         .toList();
   }
 
-  /// Obtener citas pasadas
+  /// Obtener citas pasadas - SOLO confirmadas que ya pasaron o completadas
   List<Cita> get citasPasadas {
     final ahora = DateTime.now();
     return _citas
         .where(
           (cita) =>
-              cita.fechaHora.isBefore(ahora) ||
+              (cita.status == CitaStatus.confirmada &&
+                  cita.fechaHora.isBefore(ahora)) ||
               cita.status == CitaStatus.completada,
         )
         .toList();
   }
 
-  /// Obtener citas canceladas
+  /// Obtener citas canceladas (incluye rechazadas y expiradas)
   List<Cita> get citasCanceladas {
     return _citas.where((cita) => cita.status == CitaStatus.cancelada).toList();
   }
@@ -210,9 +234,10 @@ class CitaProvider with ChangeNotifier {
     }
   }
 
-  /// Cancelar cita
+  /// Cancelar cita (solicitud)
+  /// Usa PUT /api/v1/SolicitudesCitasDigitales/{id}/cancelar
   Future<bool> cancelarCita({
-    required String citaId,
+    required String citaId, // En realidad es solicitudId
     required String motivo,
     String? notas,
   }) async {
@@ -221,29 +246,39 @@ class CitaProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _citaService.cancelarCita(
-        citaId: citaId,
+      print('🚫 Cancelando solicitud: $citaId');
+      print('   Motivo: $motivo');
+
+      final response = await _solicitudService.cancelarSolicitud(
+        solicitudId: citaId,
         motivo: motivo,
-        notas: notas,
       );
 
       if (response.success && response.data != null) {
-        // Actualizar la cita en la lista
+        print('✅ Solicitud cancelada exitosamente');
+
+        // Actualizar la cita en la lista con estado cancelado
         final index = _citas.indexWhere((c) => c.id == citaId);
         if (index != -1) {
-          _citas[index] = response.data!;
+          _citas[index] = _citas[index].copyWith(
+            status: CitaStatus.cancelada,
+            motivoCancelacion: motivo,
+          );
         }
 
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
+        print('❌ Error al cancelar: ${response.message}');
         _errorMessage = response.message;
         _isLoading = false;
         notifyListeners();
         return false;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Excepción al cancelar la cita: $e');
+      print('   Stack trace: $stackTrace');
       _errorMessage = 'Error al cancelar la cita: $e';
       _isLoading = false;
       notifyListeners();
@@ -348,6 +383,36 @@ class CitaProvider with ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error al obtener la cita: $e';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Obtener detalles completos de una solicitud de cita por ID
+  /// Usa el endpoint GET /api/solicitudescitasdigitales/{solicitudId}
+  /// Retorna información completa incluyendo cita confirmada y pago de anticipo
+  Future<SolicitudCitaDetallada?> obtenerSolicitudDetallePorId(
+    String solicitudId,
+  ) async {
+    try {
+      print('📋 CitaProvider: Obteniendo detalles de solicitud $solicitudId');
+      final response = await _solicitudService.obtenerSolicitudDetalladaPorId(
+        solicitudId,
+      );
+
+      if (response.success && response.data != null) {
+        print('✅ CitaProvider: Detalles obtenidos exitosamente');
+        return response.data;
+      } else {
+        print('⚠️ CitaProvider: Error - ${response.message}');
+        _errorMessage = response.message;
+        notifyListeners();
+        return null;
+      }
+    } catch (e, stackTrace) {
+      print('❌ CitaProvider: Error al obtener detalles de solicitud: $e');
+      print('   Stack trace: $stackTrace');
+      _errorMessage = 'Error al obtener los detalles de la cita: $e';
       notifyListeners();
       return null;
     }

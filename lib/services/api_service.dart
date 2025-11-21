@@ -316,12 +316,18 @@ class ApiService {
     try {
       // Si la respuesta está vacía, retornar error
       if (response.body.isEmpty) {
-        print('   ⚠️ Body vacío');
+        print('   ⚠️ Body vacío - Status: ${response.statusCode}');
+        print('   ⚠️ URL: ${response.request?.url}');
+        print('   ⚠️ Método: ${response.request?.method}');
+
         return ApiResponse<T>(
           success: response.statusCode >= 200 && response.statusCode < 300,
           message: response.statusCode == 204
               ? 'Operación exitosa'
-              : 'Respuesta vacía',
+              : 'Respuesta vacía (Status ${response.statusCode}). Verifica que el backend esté corriendo y el endpoint exista.',
+          errors: response.statusCode >= 400
+              ? ['HTTP ${response.statusCode}: ${response.request?.url}']
+              : [],
         );
       }
 

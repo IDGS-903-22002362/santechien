@@ -449,13 +449,48 @@ class _PagarSolicitudScreenState extends State<PagarSolicitudScreen> {
         }
       } else {
         print('❌ Error en la respuesta: ${response.message}');
-        if (response.errors != null && response.errors!.isNotEmpty) {
+        if (response.errors.isNotEmpty) {
           print('   Errores: ${response.errors}');
         }
 
+        // Mensaje de error más descriptivo
+        String errorMsg = response.message;
+
+        if (errorMsg.contains('Respuesta vacía')) {
+          errorMsg = '''
+❌ Error de Conexión con el Backend
+
+Posibles causas:
+1. El backend no está corriendo
+2. La URL del backend es incorrecta
+3. El backend no tiene configurado el endpoint de PayPal
+4. Problemas de red o CORS
+5. ⚠️ CREDENCIALES DE PAYPAL no configuradas en el backend
+
+Verifica en el BACKEND:
+✓ Backend corriendo en la URL configurada
+✓ Endpoint existe: POST /api/v1/Pagos/paypal/create-order
+✓ Credenciales PayPal en appsettings.json:
+  {
+    "PayPal": {
+      "Mode": "sandbox",
+      "ClientId": "TU_CLIENT_ID",
+      "ClientSecret": "TU_CLIENT_SECRET"
+    }
+  }
+✓ Logs del backend para más detalles
+
+🔑 Obtener credenciales:
+1. Ve a https://developer.paypal.com/
+2. Sección "Apps & Credentials"
+3. Modo "Sandbox" activado
+4. Crea una App o usa una existente
+5. Copia Client ID y Secret
+          ''';
+        }
+
         setState(() {
-          _errorMessage =
-              response.message ?? 'Error desconocido al crear orden';
+          _errorMessage = errorMsg;
           _isLoading = false;
         });
       }
@@ -468,149 +503,5 @@ class _PagarSolicitudScreenState extends State<PagarSolicitudScreen> {
         _isLoading = false;
       });
     }
-  }
-
-  void _mostrarDialogoEspera(String orderId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Completa el pago en PayPal'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            const Text(
-              'Completa el pago en la ventana de PayPal que se acaba de abrir.',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Una vez completado el pago, presiona "He completado el pago"',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => _isLoading = false);
-            },
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _verificarPago(orderId);
-            },
-            child: const Text('He completado el pago'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _verificarPago(String orderId) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      print('\n🔍 === VERIFICANDO PAGO ===');
-      print('📋 Order ID: $orderId');
-
-      // Capturar el pago
-      final request = CapturarPagoPayPalRequest(orderId: orderId);
-      final response = await _pagoService.capturarPagoPayPal(request);
-
-      print('📥 Respuesta de captura:');
-      print('   success: ${response.success}');
-      print('   message: ${response.message}');
-
-      if (mounted) {
-        Navigator.pop(context); // Cerrar loading
-
-        if (response.success && response.data != null) {
-          print('✅ Pago capturado exitosamente');
-          print('   Pago ID: ${response.data!.id}');
-          print('   Folio: ${response.data!.folioPago}');
-          print('   Status: ${response.data!.status.value}');
-
-          _mostrarExito();
-        } else {
-          print('❌ Error al capturar pago: ${response.message}');
-
-          setState(() {
-            _errorMessage = response.message ?? 'Error al verificar el pago';
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e, stackTrace) {
-      print('❌ EXCEPCIÓN al verificar pago: $e');
-      print('   Stack trace: $stackTrace');
-
-      if (mounted) {
-        Navigator.pop(context); // Cerrar loading
-        setState(() {
-          _errorMessage = 'Error al verificar el pago: $e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _mostrarExito() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green[600], size: 32),
-            const SizedBox(width: 12),
-            const Text('¡Pago Exitoso!'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tu pago ha sido procesado correctamente.',
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 12),
-            Text(
-              '✅ Anticipo pagado (50%)',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.green,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'El personal revisará tu solicitud y te contactará para confirmar la cita. Una vez confirmada, se te asignará veterinario y sala.',
-              style: TextStyle(fontSize: 14),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Cerrar diálogo
-              Navigator.pop(context); // Volver a la pantalla anterior
-            },
-            child: const Text('Entendido'),
-          ),
-        ],
-      ),
-    );
   }
 }
