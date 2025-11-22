@@ -6,10 +6,12 @@ import 'firebase_options.dart';
 import 'config/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cita_provider.dart';
+import 'providers/mascota_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/citas/citas_screen.dart';
+import 'screens/mascotas/mascotas_screen.dart';
 import 'screens/mascotas/mis_mascotas_screen.dart';
 import 'screens/mascotas/registrar_mascota_screen.dart';
 import 'screens/solicitudes/solicitud_cita_screen.dart';
@@ -39,6 +41,7 @@ class AdoPetsApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CitaProvider()),
+        ChangeNotifierProvider(create: (_) => MascotaProvider()),
       ],
       child: MaterialApp(
         title: 'AdoPets',
@@ -64,6 +67,7 @@ class AdoPetsApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const HomeScreen(),
           '/citas': (context) => const CitasScreen(),
+          '/mascotas': (context) => const MascotasScreen(),
           '/mis-mascotas': (context) => const MisMascotasScreen(),
           '/registrar-mascota': (context) => const RegistrarMascotaScreen(),
           '/solicitar-cita': (context) => const SolicitudCitaScreen(),

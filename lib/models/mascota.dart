@@ -1,5 +1,27 @@
 import 'package:equatable/equatable.dart';
 
+/// Modelo de foto de mascota
+class MascotaFoto extends Equatable {
+  final String storageKey;
+  final String? descripcion;
+
+  const MascotaFoto({required this.storageKey, this.descripcion});
+
+  factory MascotaFoto.fromJson(Map<String, dynamic> json) {
+    return MascotaFoto(
+      storageKey: json['storageKey']?.toString() ?? '',
+      descripcion: json['descripcion']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'storageKey': storageKey, 'descripcion': descripcion};
+  }
+
+  @override
+  List<Object?> get props => [storageKey, descripcion];
+}
+
 /// Modelo de mascota
 class Mascota extends Equatable {
   final String id;
@@ -14,6 +36,7 @@ class Mascota extends Equatable {
   final bool activo;
   final String? propietarioId;
   final String? propietarioNombre;
+  final List<MascotaFoto>? fotos;
 
   const Mascota({
     required this.id,
@@ -28,11 +51,20 @@ class Mascota extends Equatable {
     this.activo = true,
     this.propietarioId,
     this.propietarioNombre,
+    this.fotos,
   });
 
   /// Crear desde JSON
   factory Mascota.fromJson(Map<String, dynamic> json) {
     try {
+      // Parsear fotos
+      List<MascotaFoto>? fotos;
+      if (json['fotos'] is List) {
+        fotos = (json['fotos'] as List)
+            .map((foto) => MascotaFoto.fromJson(foto))
+            .toList();
+      }
+
       return Mascota(
         id: json['id']?.toString() ?? '',
         nombre: json['nombre']?.toString() ?? '',
@@ -52,6 +84,7 @@ class Mascota extends Equatable {
             json['activo']?.toString().toLowerCase() == 'true',
         propietarioId: json['propietarioId']?.toString(),
         propietarioNombre: json['propietarioNombre']?.toString(),
+        fotos: fotos,
       );
     } catch (e) {
       print('❌ Error en Mascota.fromJson: $e');
@@ -75,6 +108,7 @@ class Mascota extends Equatable {
       'activo': activo,
       'propietarioId': propietarioId,
       'propietarioNombre': propietarioNombre,
+      'fotos': fotos?.map((f) => f.toJson()).toList(),
     };
   }
 
@@ -114,5 +148,6 @@ class Mascota extends Equatable {
     activo,
     propietarioId,
     propietarioNombre,
+    fotos,
   ];
 }

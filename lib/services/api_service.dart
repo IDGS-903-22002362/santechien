@@ -421,6 +421,146 @@ class ApiService {
         return 'Error en la solicitud ($statusCode)';
     }
   }
+
+  /// Realizar petición GET para endpoints que devuelven listas directamente
+  Future<ApiResponse<T>> getList<T>(
+    String endpoint, {
+    T Function(dynamic)? fromJson,
+    bool requiresAuth = true,
+  }) async {
+    try {
+      final headers = await _getHeaders(requiresAuth);
+      final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+
+      print('📋 GET List Request:');
+      print('   Endpoint: $endpoint');
+      print('   URL completa: $uri');
+
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(ApiConfig.timeout);
+
+      print('📥 Respuesta List HTTP:');
+      print('   Status: ${response.statusCode}');
+      print('   Body length: ${response.body.length} chars');
+
+      // Manejar respuesta vacía
+      if (response.body.isEmpty) {
+        print('   ⚠️ Body vacío');
+        return ApiResponse<T>(
+          success: response.statusCode >= 200 && response.statusCode < 300,
+          message: response.statusCode == 204
+              ? 'Operación exitosa'
+              : 'Respuesta vacía',
+        );
+      }
+
+      try {
+        final dynamic decodedBody = json.decode(response.body);
+        print('   ✅ JSON decodificado correctamente');
+        print('   Tipo de dato: ${decodedBody.runtimeType}');
+
+        // Manejar errores HTTP (400+)
+        if (response.statusCode >= 400) {
+          print('   ❌ Error HTTP ${response.statusCode}');
+
+          // Si es un Map con estructura de error estándar
+          if (decodedBody is Map<String, dynamic>) {
+            return ApiResponse<T>(
+              success: false,
+              message:
+                  decodedBody['message'] as String? ??
+                  _getErrorMessage(response.statusCode),
+              errors:
+                  (decodedBody['errors'] as List<dynamic>?)
+                      ?.map((e) => e.toString())
+                      .toList() ??
+                  [],
+            );
+          } else {
+            // Si es otra estructura de error
+            return ApiResponse<T>(
+              success: false,
+              message: _getErrorMessage(response.statusCode),
+            );
+          }
+        }
+
+        // ✅ MANEJAR LISTAS DIRECTAMENTE
+        if (decodedBody is List) {
+          print('   ✅✅✅ Respuesta es una Lista directa');
+          print('   Número de elementos: ${decodedBody.length}');
+
+          if (fromJson != null) {
+            try {
+              final data = fromJson(decodedBody);
+              return ApiResponse<T>(
+                success: true,
+                data: data,
+                message: 'Datos obtenidos correctamente',
+              );
+            } catch (e) {
+              print('   ❌ Error en fromJson: $e');
+              return ApiResponse<T>(
+                success: false,
+                message: 'Error al procesar los datos',
+                errors: [e.toString()],
+              );
+            }
+          } else {
+            // Si no hay fromJson, devolver la lista como data genérica
+            return ApiResponse<T>(
+              success: true,
+              data: decodedBody as T,
+              message: 'Datos obtenidos correctamente',
+            );
+          }
+        }
+        // ✅ MANEJAR MAPAS (estructura estándar)
+        else if (decodedBody is Map<String, dynamic>) {
+          print('   ✅ Respuesta es un Map, usando _handleResponse normal');
+          return _handleResponse<T>(response, fromJson);
+        }
+        // ❌ Formato no soportado
+        else {
+          print(
+            '   ⚠️ Formato de respuesta no soportado: ${decodedBody.runtimeType}',
+          );
+          return ApiResponse<T>(
+            success: false,
+            message: 'Formato de respuesta no soportado',
+          );
+        }
+      } catch (e, stackTrace) {
+        print('   ❌ Error al decodificar JSON: $e');
+        print('   Stack trace: $stackTrace');
+        print('   Body completo: ${response.body}');
+        return ApiResponse<T>(
+          success: false,
+          message: 'Error al procesar la respuesta: ${e.toString()}',
+          errors: [e.toString()],
+        );
+      }
+    } on SocketException {
+      return ApiResponse<T>(
+        success: false,
+        message: AppConstants.msgNetworkError,
+        errors: const ['No hay conexión a internet'],
+      );
+    } on TimeoutException {
+      return ApiResponse<T>(
+        success: false,
+        message: 'La solicitud tardó demasiado tiempo',
+        errors: const ['Tiempo de espera agotado'],
+      );
+    } catch (e) {
+      return ApiResponse<T>(
+        success: false,
+        message: AppConstants.msgUnknownError,
+        errors: [e.toString()],
+      );
+    }
+  }
 }
 
 class TimeoutException implements Exception {

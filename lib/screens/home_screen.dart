@@ -103,6 +103,14 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.pets),
+                  title: const Text('Mascotas adopción'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/mascotas');
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.assignment),
                   title: const Text('Mis Solicitudes'),
                   onTap: () {
