@@ -425,8 +425,9 @@ Contacta con el personal para más información.
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          CitaDetalleScreen(citaId: _solicitud!.citaId!),
+                      builder: (context) => CitaDetalleScreen(
+                        citaId: _solicitud!.id,
+                      ), // ✅ Pasar el ID de la solicitud
                     ),
                   ).then((_) => _cargarSolicitud());
                 },

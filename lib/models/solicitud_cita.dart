@@ -397,6 +397,301 @@ class Servicio extends Equatable {
   ];
 }
 
+/// Modelo de cita oficial confirmada (nested dentro de SolicitudCitaDetallada)
+class CitaOficial extends Equatable {
+  final String id;
+  final DateTime fechaHoraInicio;
+  final DateTime fechaHoraFin;
+  final int estado;
+  final String estadoNombre;
+  final VeterinarioInfo? veterinario;
+  final SalaInfo? sala;
+
+  const CitaOficial({
+    required this.id,
+    required this.fechaHoraInicio,
+    required this.fechaHoraFin,
+    required this.estado,
+    required this.estadoNombre,
+    this.veterinario,
+    this.sala,
+  });
+
+  factory CitaOficial.fromJson(Map<String, dynamic> json) {
+    return CitaOficial(
+      id: json['id'] as String? ?? '',
+      fechaHoraInicio: json['fechaHoraInicio'] != null
+          ? DateTime.parse(json['fechaHoraInicio'] as String)
+          : DateTime.now(),
+      fechaHoraFin: json['fechaHoraFin'] != null
+          ? DateTime.parse(json['fechaHoraFin'] as String)
+          : DateTime.now(),
+      estado: json['estado'] as int? ?? 0,
+      estadoNombre: json['estadoNombre'] as String? ?? '',
+      veterinario: json['veterinario'] != null
+          ? VeterinarioInfo.fromJson(json['veterinario'])
+          : null,
+      sala: json['sala'] != null ? SalaInfo.fromJson(json['sala']) : null,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    fechaHoraInicio,
+    fechaHoraFin,
+    estado,
+    estadoNombre,
+    veterinario,
+    sala,
+  ];
+}
+
+/// Modelo de veterinario simplificado
+class VeterinarioInfo extends Equatable {
+  final String id;
+  final String nombre;
+
+  const VeterinarioInfo({required this.id, required this.nombre});
+
+  factory VeterinarioInfo.fromJson(Map<String, dynamic> json) {
+    return VeterinarioInfo(
+      id: json['id'] as String? ?? '',
+      nombre: json['nombre'] as String? ?? '',
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, nombre];
+}
+
+/// Modelo de sala simplificado
+class SalaInfo extends Equatable {
+  final String id;
+  final String nombre;
+
+  const SalaInfo({required this.id, required this.nombre});
+
+  factory SalaInfo.fromJson(Map<String, dynamic> json) {
+    return SalaInfo(
+      id: json['id'] as String? ?? '',
+      nombre: json['nombre'] as String? ?? '',
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, nombre];
+}
+
+/// Modelo de pago de anticipo
+class PagoAnticipo extends Equatable {
+  final String id;
+  final String numeroPago;
+  final double monto;
+  final String moneda;
+  final int estado;
+  final String estadoNombre;
+  final int metodo;
+  final String metodoNombre;
+  final DateTime fechaPago;
+  final String? payPalOrderId;
+
+  const PagoAnticipo({
+    required this.id,
+    required this.numeroPago,
+    required this.monto,
+    required this.moneda,
+    required this.estado,
+    required this.estadoNombre,
+    required this.metodo,
+    required this.metodoNombre,
+    required this.fechaPago,
+    this.payPalOrderId,
+  });
+
+  factory PagoAnticipo.fromJson(Map<String, dynamic> json) {
+    return PagoAnticipo(
+      id: json['id'] as String? ?? '',
+      numeroPago: json['numeroPago'] as String? ?? '',
+      monto: (json['monto'] as num?)?.toDouble() ?? 0.0,
+      moneda: json['moneda'] as String? ?? 'MXN',
+      estado: json['estado'] as int? ?? 0,
+      estadoNombre: json['estadoNombre'] as String? ?? '',
+      metodo: json['metodo'] as int? ?? 0,
+      metodoNombre: json['metodoNombre'] as String? ?? '',
+      fechaPago: json['fechaPago'] != null
+          ? DateTime.parse(json['fechaPago'] as String)
+          : DateTime.now(),
+      payPalOrderId: json['payPalOrderId'] as String?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    numeroPago,
+    monto,
+    moneda,
+    estado,
+    estadoNombre,
+    metodo,
+    metodoNombre,
+    fechaPago,
+    payPalOrderId,
+  ];
+}
+
+/// Modelo de solicitud de cita detallada (respuesta completa del endpoint)
+class SolicitudCitaDetallada extends Equatable {
+  final String id;
+  final String numeroSolicitud;
+  final String solicitanteId;
+  final String nombreSolicitante;
+  final String emailSolicitante;
+  final String? telefonoSolicitante;
+  final String mascotaId;
+  final String nombreMascota;
+  final String especieMascota;
+  final String? razaMascota;
+  final String servicioId;
+  final String descripcionServicio;
+  final String motivoConsulta;
+  final DateTime fechaHoraSolicitada;
+  final int duracionEstimadaMin;
+  final double costoEstimado;
+  final double montoAnticipo;
+  final int estado;
+  final String estadoNombre;
+  final DateTime fechaSolicitud;
+  final DateTime? fechaRevision;
+  final DateTime? fechaConfirmacion;
+  final String? pagoAnticipoId;
+  final String? citaId;
+  final String? veterinarioPreferidoId;
+  final String? salaPreferidaId;
+  final bool disponibilidadVerificada;
+  final String? observaciones;
+  final String? motivoRechazo;
+  final CitaOficial? cita;
+  final PagoAnticipo? pagoAnticipo;
+
+  const SolicitudCitaDetallada({
+    required this.id,
+    required this.numeroSolicitud,
+    required this.solicitanteId,
+    required this.nombreSolicitante,
+    required this.emailSolicitante,
+    this.telefonoSolicitante,
+    required this.mascotaId,
+    required this.nombreMascota,
+    required this.especieMascota,
+    this.razaMascota,
+    required this.servicioId,
+    required this.descripcionServicio,
+    required this.motivoConsulta,
+    required this.fechaHoraSolicitada,
+    required this.duracionEstimadaMin,
+    required this.costoEstimado,
+    required this.montoAnticipo,
+    required this.estado,
+    required this.estadoNombre,
+    required this.fechaSolicitud,
+    this.fechaRevision,
+    this.fechaConfirmacion,
+    this.pagoAnticipoId,
+    this.citaId,
+    this.veterinarioPreferidoId,
+    this.salaPreferidaId,
+    this.disponibilidadVerificada = false,
+    this.observaciones,
+    this.motivoRechazo,
+    this.cita,
+    this.pagoAnticipo,
+  });
+
+  factory SolicitudCitaDetallada.fromJson(Map<String, dynamic> json) {
+    return SolicitudCitaDetallada(
+      id: json['id'] as String? ?? '',
+      numeroSolicitud: json['numeroSolicitud'] as String? ?? '',
+      solicitanteId: json['solicitanteId'] as String? ?? '',
+      nombreSolicitante: json['nombreSolicitante'] as String? ?? '',
+      emailSolicitante: json['emailSolicitante'] as String? ?? '',
+      telefonoSolicitante: json['telefonoSolicitante'] as String?,
+      mascotaId: json['mascotaId'] as String? ?? '',
+      nombreMascota: json['nombreMascota'] as String? ?? '',
+      especieMascota: json['especieMascota'] as String? ?? '',
+      razaMascota: json['razaMascota'] as String?,
+      servicioId: json['servicioId'] as String? ?? '',
+      descripcionServicio: json['descripcionServicio'] as String? ?? '',
+      motivoConsulta: json['motivoConsulta'] as String? ?? '',
+      fechaHoraSolicitada: json['fechaHoraSolicitada'] != null
+          ? DateTime.parse(json['fechaHoraSolicitada'] as String)
+          : DateTime.now(),
+      duracionEstimadaMin: json['duracionEstimadaMin'] as int? ?? 30,
+      costoEstimado: (json['costoEstimado'] as num?)?.toDouble() ?? 0.0,
+      montoAnticipo: (json['montoAnticipo'] as num?)?.toDouble() ?? 0.0,
+      estado: json['estado'] as int? ?? 0,
+      estadoNombre: json['estadoNombre'] as String? ?? '',
+      fechaSolicitud: json['fechaSolicitud'] != null
+          ? DateTime.parse(json['fechaSolicitud'] as String)
+          : DateTime.now(),
+      fechaRevision: json['fechaRevision'] != null
+          ? DateTime.parse(json['fechaRevision'] as String)
+          : null,
+      fechaConfirmacion: json['fechaConfirmacion'] != null
+          ? DateTime.parse(json['fechaConfirmacion'] as String)
+          : null,
+      pagoAnticipoId: json['pagoAnticipoId'] as String?,
+      citaId: json['citaId'] as String?,
+      veterinarioPreferidoId: json['veterinarioPreferidoId'] as String?,
+      salaPreferidaId: json['salaPreferidaId'] as String?,
+      disponibilidadVerificada:
+          json['disponibilidadVerificada'] as bool? ?? false,
+      observaciones: json['observaciones'] as String?,
+      motivoRechazo: json['motivoRechazo'] as String?,
+      cita: json['cita'] != null ? CitaOficial.fromJson(json['cita']) : null,
+      pagoAnticipo: json['pagoAnticipo'] != null
+          ? PagoAnticipo.fromJson(json['pagoAnticipo'])
+          : null,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    numeroSolicitud,
+    solicitanteId,
+    nombreSolicitante,
+    emailSolicitante,
+    telefonoSolicitante,
+    mascotaId,
+    nombreMascota,
+    especieMascota,
+    razaMascota,
+    servicioId,
+    descripcionServicio,
+    motivoConsulta,
+    fechaHoraSolicitada,
+    duracionEstimadaMin,
+    costoEstimado,
+    montoAnticipo,
+    estado,
+    estadoNombre,
+    fechaSolicitud,
+    fechaRevision,
+    fechaConfirmacion,
+    pagoAnticipoId,
+    citaId,
+    veterinarioPreferidoId,
+    salaPreferidaId,
+    disponibilidadVerificada,
+    observaciones,
+    motivoRechazo,
+    cita,
+    pagoAnticipo,
+  ];
+}
+
 /// Request para registrar mascota propia
 class RegistrarMascotaRequest {
   final String nombre;

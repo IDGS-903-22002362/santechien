@@ -1,5 +1,5 @@
-name: app_movil
-description: "A new Flutter project."
+name: adopets_app
+description: AdoPets Mobile Application
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -39,21 +39,28 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   
-  # Firebase - versiones compatibles
+  # Firebase - versiones compatibles (Core requerido para messaging)
   firebase_core: ^3.15.2
   firebase_auth: ^5.3.4
+  firebase_messaging: ^15.2.10
   google_sign_in: ^6.2.2
   
+  # Local Notifications (Para mostrar notificaciones)
+  flutter_local_notifications: ^17.2.3
+  
   # HTTP y API
-  http: ^1.2.2
+  http: ^1.1.2
   dio: ^5.7.0
   
   # State Management
   provider: ^6.1.2
   
   # Storage
-  shared_preferences: ^2.3.5
+  shared_preferences: ^2.2.2
   flutter_secure_storage: ^9.2.2
+  
+  # Permisos
+  permission_handler: ^11.1.0
   
   # UI
   google_fonts: ^6.2.1
