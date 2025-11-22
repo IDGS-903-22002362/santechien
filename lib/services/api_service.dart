@@ -428,7 +428,6 @@ class ApiService {
     }
   }
 
-<<<<<<< HEAD
   /// Realizar petición GET para endpoints que devuelven listas directamente
   Future<ApiResponse<T>> getList<T>(
     String endpoint, {
@@ -567,7 +566,8 @@ class ApiService {
         errors: [e.toString()],
       );
     }
-=======
+  }
+
   /// ======= NOTIFICACIONES PUSH - DISPOSITIVOS =======
 
   /// Registrar dispositivo en el backend
@@ -642,7 +642,6 @@ class ApiService {
       body: {'token': nuevoToken},
       requiresAuth: true,
     );
->>>>>>> 7ab3277c5d78f93a6c267c97b46e7c5d06ccadc3
   }
 }
 
