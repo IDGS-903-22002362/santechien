@@ -213,6 +213,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const Divider(),
                 ListTile(
+                  leading: const Icon(Icons.volunteer_activism),
+                  title: const Text('Hacer Donación'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/donaciones');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.receipt_long),
+                  title: const Text('Historial Donaciones'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/donaciones/historial');
+                  },
+                ),
+                const Divider(),
+                ListTile(
                   leading: const Icon(Icons.person),
                   title: const Text('Mi Perfil'),
                   onTap: () {

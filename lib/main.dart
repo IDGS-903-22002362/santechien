@@ -11,6 +11,7 @@ import 'config/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cita_provider.dart';
 import 'providers/mascota_provider.dart';
+import 'providers/donacion_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -20,6 +21,8 @@ import 'screens/mascotas/mis_mascotas_screen.dart';
 import 'screens/mascotas/registrar_mascota_screen.dart';
 import 'screens/solicitudes/solicitud_cita_screen.dart';
 import 'screens/solicitudes/mis_solicitudes_screen.dart';
+import 'screens/donaciones/donacion_screen.dart';
+import 'screens/donaciones/historial_donaciones_screen.dart';
 import 'screens/debug/debug_auth_screen.dart';
 import 'utils/ui_logger.dart';
 import 'services/storage_service.dart';
@@ -62,7 +65,10 @@ class AdoPetsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CitaProvider()),
         ChangeNotifierProvider(create: (_) => MascotaProvider()),
+
         ChangeNotifierProvider(create: (_) => AdopcionProvider()),
+        ChangeNotifierProvider(create: (_) => DonacionProvider()),
+
       ],
       child: MaterialApp(
         title: 'AdoPets',
@@ -95,8 +101,14 @@ class AdoPetsApp extends StatelessWidget {
           '/registrar-mascota': (context) => const RegistrarMascotaScreen(),
           '/solicitar-cita': (context) => const SolicitudCitaScreen(),
           '/mis-solicitudes': (context) => const MisSolicitudesScreen(),
+
           '/mis-solicitudes-adopcion': (context) =>
               const MisSolicitudesAdopcionScreen(),
+
+          '/donaciones': (context) => const DonacionScreen(),
+          '/donaciones/historial': (context) =>
+              const HistorialDonacionesScreen(),
+
           '/debug-auth': (context) =>
               const DebugAuthScreen(), // Solo desarrollo
           '/ui-logs': (context) =>
