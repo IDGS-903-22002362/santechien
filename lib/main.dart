@@ -1,3 +1,6 @@
+import 'package:adopets_app/providers/adopcion_provider.dart';
+import 'package:adopets_app/screens/solicitudes/mis_solicitudes_adopcion_screen.dart';
+import 'package:adopets_app/screens/solicitudes/solicitud_adopcion_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -62,7 +65,10 @@ class AdoPetsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CitaProvider()),
         ChangeNotifierProvider(create: (_) => MascotaProvider()),
+
+        ChangeNotifierProvider(create: (_) => AdopcionProvider()),
         ChangeNotifierProvider(create: (_) => DonacionProvider()),
+
       ],
       child: MaterialApp(
         title: 'AdoPets',
@@ -89,13 +95,20 @@ class AdoPetsApp extends StatelessWidget {
           '/home': (context) => const HomeScreen(),
           '/citas': (context) => const CitasScreen(),
           '/mascotas': (context) => const MascotasScreen(),
+          '/solicitud-adopcion': (context) => const SolicitudAdopcionScreen(),
+
           '/mis-mascotas': (context) => const MisMascotasScreen(),
           '/registrar-mascota': (context) => const RegistrarMascotaScreen(),
           '/solicitar-cita': (context) => const SolicitudCitaScreen(),
           '/mis-solicitudes': (context) => const MisSolicitudesScreen(),
+
+          '/mis-solicitudes-adopcion': (context) =>
+              const MisSolicitudesAdopcionScreen(),
+
           '/donaciones': (context) => const DonacionScreen(),
           '/donaciones/historial': (context) =>
               const HistorialDonacionesScreen(),
+
           '/debug-auth': (context) =>
               const DebugAuthScreen(), // Solo desarrollo
           '/ui-logs': (context) =>

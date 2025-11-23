@@ -176,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.pushNamed(context, '/mascotas');
                   },
                 ),
+
                 ListTile(
                   leading: const Icon(Icons.assignment),
                   title: const Text('Mis Solicitudes'),
@@ -200,11 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     // TODO: Navegar a favoritos
                   },
                 ),
+
                 ListTile(
                   leading: const Icon(Icons.history),
                   title: const Text('Mis Adopciones'),
                   onTap: () {
                     Navigator.pop(context);
+                    Navigator.pushNamed(context, '/mis-solicitudes-adopcion');
                     // TODO: Navegar a adopciones
                   },
                 ),

@@ -38,6 +38,17 @@ class Mascota extends Equatable {
   final String? propietarioNombre;
   final List<MascotaFoto>? fotos;
 
+  // Nueva propiedades
+  final int estatus;
+  final String? personalidad;
+  final String? estadoSalud;
+  final String? requisitoAdopcion;
+  final String? origen;
+  final String? notas;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  final int? edadEnAnios;
+
   const Mascota({
     required this.id,
     required this.nombre,
@@ -52,10 +63,30 @@ class Mascota extends Equatable {
     this.propietarioId,
     this.propietarioNombre,
     this.fotos,
+    // NUEVAS PROPIEDADES
+    required this.estatus,
+    this.personalidad,
+    this.estadoSalud,
+    this.requisitoAdopcion,
+    this.origen,
+    this.notas,
+    required this.createdAt,
+    this.updatedAt,
+    this.edadEnAnios,
   });
 
   /// Crear desde JSON
   factory Mascota.fromJson(Map<String, dynamic> json) {
+    // Función auxiliar para parsear fechas
+    DateTime? parseDateTime(dynamic date) {
+      if (date == null) return null;
+      try {
+        return DateTime.tryParse(date.toString());
+      } catch (e) {
+        return null;
+      }
+    }
+
     try {
       // Parsear fotos
       List<MascotaFoto>? fotos;
@@ -72,9 +103,7 @@ class Mascota extends Equatable {
         raza: json['raza']?.toString(),
         color: json['color']?.toString(),
         sexo: json['sexo']?.toString(),
-        fechaNacimiento: json['fechaNacimiento'] != null
-            ? DateTime.tryParse(json['fechaNacimiento'].toString())
-            : null,
+        fechaNacimiento: parseDateTime(json['fechaNacimiento']),
         peso: json['peso'] != null
             ? double.tryParse(json['peso'].toString())
             : null,
@@ -85,6 +114,22 @@ class Mascota extends Equatable {
         propietarioId: json['propietarioId']?.toString(),
         propietarioNombre: json['propietarioNombre']?.toString(),
         fotos: fotos,
+        // NUEVAS PROPIEDADES
+        estatus: json['estatus'] != null
+            ? int.tryParse(json['estatus'].toString()) ?? 1
+            : 1,
+        personalidad: json['personalidad']?.toString(),
+        estadoSalud: json['estadoSalud']?.toString(),
+        requisitoAdopcion: json['requisitoAdopcion']?.toString(),
+        origen: json['origen']?.toString(),
+        notas: json['notas']?.toString(),
+        createdAt: parseDateTime(json['createdAt']) ?? DateTime.now(),
+        updatedAt: parseDateTime(json['updatedAt']),
+        edadEnAnios: json['edadEnAnios'] != null
+            ? int.tryParse(json['edadEnAnios'].toString())
+            : json['edadEnAnio'] != null
+            ? int.tryParse(json['edadEnAnio'].toString())
+            : null,
       );
     } catch (e) {
       print('❌ Error en Mascota.fromJson: $e');
@@ -109,12 +154,22 @@ class Mascota extends Equatable {
       'propietarioId': propietarioId,
       'propietarioNombre': propietarioNombre,
       'fotos': fotos?.map((f) => f.toJson()).toList(),
+      // NUEVAS PROPIEDADES
+      'estatus': estatus,
+      'personalidad': personalidad,
+      'estadoSalud': estadoSalud,
+      'requisitoAdopcion': requisitoAdopcion,
+      'origen': origen,
+      'notas': notas,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'edadEnAnios': edadEnAnios,
     };
   }
 
-  /// Calcular edad en años
-  int? get edadEnAnios {
-    if (fechaNacimiento == null) return null;
+  /// Calcular edad en años (método de respaldo)
+  int? get calcularEdadEnAnios {
+    if (fechaNacimiento == null) return edadEnAnios;
     final ahora = DateTime.now();
     int edad = ahora.year - fechaNacimiento!.year;
     if (ahora.month < fechaNacimiento!.month ||
@@ -127,12 +182,31 @@ class Mascota extends Equatable {
 
   /// Obtener descripción de edad
   String get descripcionEdad {
-    final edad = edadEnAnios;
+    final edad = edadEnAnios ?? calcularEdadEnAnios;
     if (edad == null) return 'Edad desconocida';
     if (edad == 0) return 'Menos de 1 año';
     if (edad == 1) return '1 año';
     return '$edad años';
   }
+
+  /// Obtener texto del estatus
+  String get estatusTexto {
+    switch (estatus) {
+      case 1:
+        return 'Disponible';
+      case 2:
+        return 'En proceso';
+      case 3:
+        return 'Adoptado';
+      case 4:
+        return 'No disponible';
+      default:
+        return 'Desconocido';
+    }
+  }
+
+  /// Verificar si está disponible para adopción
+  bool get estaDisponible => estatus == 1;
 
   @override
   List<Object?> get props => [
@@ -149,5 +223,14 @@ class Mascota extends Equatable {
     propietarioId,
     propietarioNombre,
     fotos,
+    estatus,
+    personalidad,
+    estadoSalud,
+    requisitoAdopcion,
+    origen,
+    notas,
+    createdAt,
+    updatedAt,
+    edadEnAnios,
   ];
 }
