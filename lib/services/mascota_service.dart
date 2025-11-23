@@ -155,38 +155,11 @@ class MascotaService {
     }
   }
 
-  /// Obtener todas las mascotas (para listar en formularios)
-  Future<ApiResponse<List<Mascota>>> obtenerTodasLasMascotas() async {
-    try {
-      final response = await _apiService.get<List<Mascota>>(
-        _basePath,
-        fromJson: (data) {
-          if (data is List) {
-            return data.map((item) => Mascota.fromJson(item)).toList();
-          }
-          return <Mascota>[];
-        },
-      );
+  // En MascotaService, actualiza el método obtenerMascotasDisponibles:
 
-      return response;
-    } catch (e) {
-      return ApiResponse<List<Mascota>>(
-        success: false,
-        message: 'Error al obtener mascotas',
-        errors: [e.toString()],
-      );
-    }
-  }
-
-  /// Obtener todas las mascotas disponibles con filtros (para adopción)
-  /// GET /api/v1/Mascota
-  /// Por defecto solo carga mascotas con estatus "disponible"
-  /// Obtener todas las mascotas disponibles con filtros (para adopción)
-
-  /// Obtener todas las mascotas disponibles con filtros (para adopción)
   Future<ApiResponse<List<Mascota>>> obtenerMascotasDisponibles({
     Map<String, String>? filtros,
-    bool soloDisponibles = true,
+    bool soloDisponibles = true, // SIEMPRE será true ahora
   }) async {
     try {
       print('🐾 Obteniendo mascotas disponibles...');
@@ -196,54 +169,56 @@ class MascotaService {
       // Preparar filtros
       Map<String, String> filtrosFinal = filtros ?? {};
 
-      // Agregar filtro de estatus si soloDisponibles es true
-      if (soloDisponibles) {
-        filtrosFinal['estatus'] = '1'; // 1 => disponible
-        print('   Filtrando solo mascotas con estatus: 1 (disponible)');
-      }
+      // SIEMPRE filtrar solo mascotas disponibles
+      filtrosFinal['estatus'] = '1'; // 1 => disponible
+      print('   Filtrando solo mascotas con estatus: 1 (disponible)');
 
-      // Agregar parámetros de filtro si existen
+      // Mapear filtros amigables a nombres de campo de la API
       if (filtrosFinal.isNotEmpty) {
-        final queryParams = filtrosFinal.entries
-            .map((e) => '${e.key}=${e.value}')
+        final Map<String, String> filtrosMapeados = {};
+
+        for (var entry in filtrosFinal.entries) {
+          switch (entry.key) {
+            case 'especie':
+              filtrosMapeados['especie'] = entry.value;
+              break;
+            case 'raza':
+              filtrosMapeados['raza'] = entry.value;
+              break;
+            case 'sexo':
+              // Convertir texto a número para la API
+              filtrosMapeados['sexo'] = entry.value == 'Macho' ? '1' : '2';
+              break;
+            case 'edad':
+              // Usar el valor numérico directamente (1, 2, 3, etc.)
+              filtrosMapeados['edadEnAnios'] = entry.value;
+              break;
+            default:
+              filtrosMapeados[entry.key] = entry.value;
+          }
+        }
+
+        final queryParams = filtrosMapeados.entries
+            .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
             .join('&');
         endpoint = '$endpoint?$queryParams';
-        print('   Filtros finales: $filtrosFinal');
+        print('   Filtros finales: $filtrosMapeados');
       }
 
-      // ✅✅✅ USAR EL NUEVO MÉTODO getList EN LUGAR DE get
       final response = await _apiService.getList<List<Mascota>>(
         endpoint,
         fromJson: (data) {
-          print('🔍 Parseando respuesta de mascotas disponibles...');
-          print('   Tipo de data recibida: ${data.runtimeType}');
-
           if (data is List) {
-            print(
-              '   ✅ Data es una lista, procesando ${data.length} elementos',
-            );
-            try {
-              final mascotas = data.map((item) {
-                // Convertir cada elemento a Map si es necesario
-                if (item is Map<String, dynamic>) {
-                  return Mascota.fromJson(item);
-                } else if (item is Map) {
-                  return Mascota.fromJson(Map<String, dynamic>.from(item));
-                } else {
-                  print('   ⚠️ Elemento inesperado: ${item.runtimeType}');
-                  throw Exception('Formato de elemento inválido');
-                }
-              }).toList();
-
-              print('   ✅ ${mascotas.length} mascotas parseadas correctamente');
-              return mascotas;
-            } catch (e, stackTrace) {
-              print('   ❌ Error al parsear lista de mascotas: $e');
-              print('   Stack trace: $stackTrace');
-              rethrow;
-            }
+            return data.map((item) {
+              if (item is Map<String, dynamic>) {
+                return Mascota.fromJson(item);
+              } else if (item is Map) {
+                return Mascota.fromJson(Map<String, dynamic>.from(item));
+              } else {
+                throw Exception('Formato de elemento inválido');
+              }
+            }).toList();
           } else {
-            print('   ⚠️ Data no es una lista: ${data.runtimeType}');
             return <Mascota>[];
           }
         },
@@ -257,6 +232,31 @@ class MascotaService {
       return ApiResponse<List<Mascota>>(
         success: false,
         message: 'Error al obtener mascotas disponibles',
+        errors: [e.toString()],
+      );
+    }
+  }
+
+  /// Obtener mascota por ID
+  Future<ApiResponse<Mascota>> obtenerMascotasPorId(String id) async {
+    try {
+      final response = await _apiService.get<Mascota>(
+        '$_basePath/$id',
+        fromJson: (data) {
+          if (data is Map<String, dynamic>) {
+            return Mascota.fromJson(data);
+          }
+
+          // Si la respuesta no es un mapa, lanzar error
+          throw Exception('Formato de respuesta inválido: ${data.runtimeType}');
+        },
+      );
+
+      return response;
+    } catch (e) {
+      return ApiResponse<Mascota>(
+        success: false,
+        message: 'Error al obtener la mascota',
         errors: [e.toString()],
       );
     }
