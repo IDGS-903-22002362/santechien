@@ -14,19 +14,42 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   StreamSubscription<RemoteMessage>? _notificationSubscription;
   final NotificationService _notificationService = NotificationService();
+  late final AnimationController _chatFabController;
+  late final Animation<double> _chatScaleAnimation;
+  late final Animation<double> _chatRotationAnimation;
 
   @override
   void initState() {
     super.initState();
     _setupNotificationListener();
+    _chatFabController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+    );
+    _chatScaleAnimation = Tween<double>(begin: 1, end: 1.08).animate(
+      CurvedAnimation(
+        parent: _chatFabController,
+        curve: Curves.easeOutBack,
+        reverseCurve: Curves.easeIn,
+      ),
+    );
+    _chatRotationAnimation = Tween<double>(begin: 0, end: 0.07).animate(
+      CurvedAnimation(
+        parent: _chatFabController,
+        curve: Curves.easeOut,
+        reverseCurve: Curves.easeIn,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _notificationSubscription?.cancel();
+    _chatFabController.dispose();
     super.dispose();
   }
 
@@ -158,6 +181,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/citas');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.chat_bubble_outline),
+                  title: const Text('Chat AdoPets'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/chat');
                   },
                 ),
                 ListTile(
@@ -443,7 +474,23 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+      floatingActionButton: _ChatFloatingButton(
+        scaleAnimation: _chatScaleAnimation,
+        rotationAnimation: _chatRotationAnimation,
+        onTap: _handleChatTap,
+      ),
     );
+  }
+
+  Future<void> _handleChatTap() async {
+    try {
+      await _chatFabController.forward();
+    } finally {
+      if (mounted) {
+        Navigator.pushNamed(context, '/chat');
+        _chatFabController.reverse();
+      }
+    }
   }
 }
 
@@ -525,6 +572,41 @@ class _HomeActionButton extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(icon, size: 20),
       label: Text(label, overflow: TextOverflow.ellipsis),
+    );
+  }
+}
+
+class _ChatFloatingButton extends StatelessWidget {
+  const _ChatFloatingButton({
+    required this.scaleAnimation,
+    required this.rotationAnimation,
+    required this.onTap,
+  });
+
+  final Animation<double> scaleAnimation;
+  final Animation<double> rotationAnimation;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, right: 4.0),
+      child: ScaleTransition(
+        scale: scaleAnimation,
+        child: RotationTransition(
+          turns: rotationAnimation,
+          child: FloatingActionButton.small(
+            heroTag: 'chat-fab',
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            onPressed: onTap,
+            elevation: 6,
+            child: const Icon(Icons.chat_rounded),
+          ),
+        ),
+      ),
     );
   }
 }
