@@ -2,7 +2,7 @@
 class ApiConfig {
   // URL base de la API
   static const String baseUrl =
-      'http://192.168.1.10:5151/api/v1'; // Dispositivo físico Android
+      'https://adopetsbkd20251124143834-b0abacgfbsd5fbdz.canadacentral-01.azurewebsites.net/api/v1'; // Dispositivo físico Android
   // static const String baseUrl = 'http://10.0.2.2:5151/api/v1'; // Android Emulator
   // static const String baseUrl = 'http://localhost:5151/api/v1'; // iOS Simulator
   // static const String baseUrl = 'https://tu-api.com/api/v1'; // Producción
