@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 import 'config/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cita_provider.dart';
+import 'providers/chat_provider.dart';
 import 'providers/mascota_provider.dart';
 import 'providers/donacion_provider.dart';
 import 'screens/splash_screen.dart';
@@ -24,6 +25,7 @@ import 'screens/solicitudes/mis_solicitudes_screen.dart';
 import 'screens/donaciones/donacion_screen.dart';
 import 'screens/donaciones/historial_donaciones_screen.dart';
 import 'screens/debug/debug_auth_screen.dart';
+import 'screens/chat/chat_screen.dart';
 import 'utils/ui_logger.dart';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
@@ -68,6 +70,7 @@ class AdoPetsApp extends StatelessWidget {
 
         ChangeNotifierProvider(create: (_) => AdopcionProvider()),
         ChangeNotifierProvider(create: (_) => DonacionProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
 
       ],
       child: MaterialApp(
@@ -108,6 +111,8 @@ class AdoPetsApp extends StatelessWidget {
           '/donaciones': (context) => const DonacionScreen(),
           '/donaciones/historial': (context) =>
               const HistorialDonacionesScreen(),
+
+          '/chat': (context) => const ChatScreen(),
 
           '/debug-auth': (context) =>
               const DebugAuthScreen(), // Solo desarrollo
