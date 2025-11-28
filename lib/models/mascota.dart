@@ -29,7 +29,7 @@ class Mascota extends Equatable {
   final String especie;
   final String? raza;
   final String? color;
-  final String? sexo;
+  final int? sexo; // 1 = Macho, 2 = Hembra
   final DateTime? fechaNacimiento;
   final double? peso;
   final String? foto;
@@ -90,10 +90,25 @@ class Mascota extends Equatable {
     try {
       // Parsear fotos
       List<MascotaFoto>? fotos;
-      if (json['fotos'] is List) {
-        fotos = (json['fotos'] as List)
-            .map((foto) => MascotaFoto.fromJson(foto))
-            .toList();
+      try {
+        if (json['fotos'] is List) {
+          fotos = (json['fotos'] as List)
+              .map((foto) {
+                if (foto is Map<String, dynamic>) {
+                  return MascotaFoto.fromJson(foto);
+                }
+                return null;
+              })
+              .where((foto) => foto != null)
+              .cast<MascotaFoto>()
+              .toList();
+        } else if (json['fotos'] is Map) {
+          // Si es un mapa individual, convertir a lista
+          fotos = [MascotaFoto.fromJson(json['fotos'] as Map<String, dynamic>)];
+        }
+      } catch (e) {
+        print('⚠️ Error parsing fotos: $e');
+        fotos = null;
       }
 
       return Mascota(
@@ -102,7 +117,9 @@ class Mascota extends Equatable {
         especie: json['especie']?.toString() ?? '',
         raza: json['raza']?.toString(),
         color: json['color']?.toString(),
-        sexo: json['sexo']?.toString(),
+        sexo: json['sexo'] != null
+            ? int.tryParse(json['sexo'].toString())
+            : null,
         fechaNacimiento: parseDateTime(json['fechaNacimiento']),
         peso: json['peso'] != null
             ? double.tryParse(json['peso'].toString())
@@ -207,6 +224,12 @@ class Mascota extends Equatable {
 
   /// Verificar si está disponible para adopción
   bool get estaDisponible => estatus == 1;
+
+  /// Obtener texto del sexo
+  String get sexoTexto {
+    if (sexo == null) return 'No especificado';
+    return sexo == 1 ? 'Macho' : 'Hembra';
+  }
 
   @override
   List<Object?> get props => [

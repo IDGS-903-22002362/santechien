@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import '../models/actualizar_mascota_request.dart';
+import '../models/api_response.dart';
 import '../models/mascota.dart';
 import '../services/mascota_service.dart';
 import '../config/api_config.dart';
@@ -9,11 +11,13 @@ class MascotaProvider with ChangeNotifier {
 
   // Estado privado
   List<Mascota> _mascotasDisponibles = [];
+  List<Mascota> _misMascotas = [];
   bool _isLoading = false;
   String? _errorMessage;
 
   // Getters públicos
   List<Mascota> get mascotasDisponibles => _mascotasDisponibles;
+  List<Mascota> get misMascotas => _misMascotas;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -103,5 +107,59 @@ class MascotaProvider with ChangeNotifier {
     }
 
     return fotoUrl ?? '';
+  }
+
+  /// Cargar mis mascotas personales
+  Future<void> cargarMisMascotas() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _mascotaService.obtenerMisMascotas();
+
+      if (response.success && response.data != null) {
+        _misMascotas = response.data!;
+        _errorMessage = null;
+      } else {
+        _misMascotas = [];
+        _errorMessage = response.message;
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      _misMascotas = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Obtener una de mis mascotas por ID
+  Future<ApiResponse<Mascota>> obtenerMiMascota(String id) async {
+    try {
+      return await _mascotaService.obtenerMiMascota(id);
+    } catch (e) {
+      return ApiResponse<Mascota>(
+        success: false,
+        message: 'Error al obtener mi mascota',
+        errors: [e.toString()],
+      );
+    }
+  }
+
+  /// Actualizar una de mis mascotas
+  Future<ApiResponse<Mascota>> actualizarMiMascota(
+    String id,
+    ActualizarMascotaRequest request,
+  ) async {
+    try {
+      return await _mascotaService.actualizarMiMascota(id, request);
+    } catch (e) {
+      return ApiResponse<Mascota>(
+        success: false,
+        message: 'Error al actualizar mi mascota',
+        errors: [e.toString()],
+      );
+    }
   }
 }

@@ -174,7 +174,11 @@ class _MascotaCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          // TODO: Navegar a detalle de mascota
+          Navigator.pushNamed(
+            context,
+            '/mi-mascota-detalle',
+            arguments: mascota.id,
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -240,15 +244,15 @@ class _MascotaCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            mascota.sexo == 'Macho' ? Icons.male : Icons.female,
+                            mascota.sexo == 1 ? Icons.male : Icons.female,
                             size: 16,
-                            color: mascota.sexo == 'Macho'
+                            color: mascota.sexo == 1
                                 ? Colors.blue
                                 : Colors.pink,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            mascota.sexo!,
+                            mascota.sexoTexto,
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[600],

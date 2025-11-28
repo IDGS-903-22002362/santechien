@@ -26,6 +26,10 @@ class ApiConfig {
   static String usuarioDeactivate(String id) => '/usuarios/$id/deactivate';
   static String usuarioRoles(String id) => '/usuarios/$id/roles';
 
+  // Endpoints de mascotas personales
+  static const String misMascotas = '/MisMascotas';
+  static String miMascotaById(String id) => '/MisMascotas/$id';
+
   // Endpoints de donaciones
   static const String donaciones = '/Donaciones';
   static const String donacionesPayPalCrear = '/Donaciones/paypal/create-order';

@@ -46,6 +46,18 @@ class Usuario extends Equatable {
 
   /// Crear desde JSON
   factory Usuario.fromJson(Map<String, dynamic> json) {
+    final rolesList =
+        (json['roles'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+        [];
+
+    final estatus = json['estatus'];
+    final activoCalc = estatus is num
+        ? estatus == 1
+        : (json['activo'] as bool? ?? true);
+
+    final fechaStr =
+        (json['fechaRegistro'] as String?) ?? (json['createdAt'] as String?);
+
     return Usuario(
       id: json['id'] as String? ?? '',
       nombre: json['nombre'] as String? ?? '',
@@ -53,15 +65,9 @@ class Usuario extends Equatable {
       apellidoMaterno: json['apellidoMaterno'] as String?,
       email: json['email'] as String? ?? '',
       telefono: json['telefono'] as String?,
-      roles:
-          (json['roles'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      activo: json['activo'] as bool? ?? true,
-      fechaRegistro: json['fechaRegistro'] != null
-          ? DateTime.parse(json['fechaRegistro'] as String)
-          : null,
+      roles: rolesList,
+      activo: activoCalc,
+      fechaRegistro: fechaStr != null ? DateTime.parse(fechaStr) : null,
     );
   }
 

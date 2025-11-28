@@ -225,15 +225,6 @@ class _HomeScreenState extends State<HomeScreen>
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.favorite),
-                  title: const Text('Mis Favoritos'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // TODO: Navegar a favoritos
-                  },
-                ),
-
-                ListTile(
                   leading: const Icon(Icons.history),
                   title: const Text('Mis Adopciones'),
                   onTap: () {
@@ -265,15 +256,7 @@ class _HomeScreenState extends State<HomeScreen>
                   title: const Text('Mi Perfil'),
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navegar a perfil
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Configuración'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // TODO: Navegar a configuración
+                    Navigator.pushNamed(context, '/perfil');
                   },
                 ),
                 const Divider(),
@@ -281,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ListTile(
                   leading: const Icon(Icons.bug_report, color: Colors.orange),
                   title: const Text(
-                    '🔍 Debug Auth',
+                    'Debug Auth',
                     style: TextStyle(color: Colors.orange),
                   ),
                   onTap: () {
@@ -292,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ListTile(
                   leading: const Icon(Icons.article, color: Colors.blue),
                   title: const Text(
-                    '📋 Ver Logs',
+                    'Ver Logs',
                     style: TextStyle(color: Colors.blue),
                   ),
                   onTap: () {
@@ -365,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                         SizedBox(height: 24),
                         Text(
-                          '?Hola, ${usuario?.nombre ?? 'Usuario'}!',
+                          '¡Hola, ${usuario?.nombre ?? 'Usuario'}!',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -442,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Gestiona las citas de tus mascotas de manera f?cil y r?pida.',
+                                'Gestiona las citas de tus mascotas de manera fácil y rápida.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,

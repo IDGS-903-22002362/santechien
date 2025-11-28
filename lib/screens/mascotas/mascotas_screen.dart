@@ -788,16 +788,12 @@ class _MascotaCard extends StatelessWidget {
     );
   }
 
-  String _obtenerSexoTexto(String? sexo) {
-    if (sexo == null || sexo.isEmpty) return 'No especificado';
-    switch (sexo.toLowerCase()) {
-      case 'macho':
-      case 'male':
-      case '1':
+  String _obtenerSexoTexto(int? sexo) {
+    if (sexo == null) return 'No especificado';
+    switch (sexo) {
+      case 1:
         return 'Macho';
-      case 'hembra':
-      case 'female':
-      case '2':
+      case 2:
         return 'Hembra';
       default:
         return 'No especificado';

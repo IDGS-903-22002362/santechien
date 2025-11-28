@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/alert_widgets.dart';
 import '../../widgets/loading_overlay.dart';
 
@@ -64,14 +63,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 100,
                               decoration: BoxDecoration(
                                 color: AppTheme.primaryColor.withAlpha(
-                                  (0.1 * 255).round(),
+                                  (0.08 * 255).round(),
                                 ),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.pets,
-                                size: 50,
-                                color: AppTheme.primaryColor,
+                              child: ClipOval(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Image.asset(
+                                    'assets/icon/app_icon.png',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 24),
@@ -109,50 +112,36 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
 
                             // Botón de Google Sign In
-                            CustomButton(
-                              text: 'Continuar con Google',
-                              onPressed: _handleGoogleSignIn,
-                              isLoading: _isLoading,
-                              icon: Icons.g_mobiledata,
-                              backgroundColor: Colors.white,
-                              textColor: AppTheme.textPrimary,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Divider
-                            const Row(
-                              children: [
-                                Expanded(child: Divider()),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'o',
-                                    style: TextStyle(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 14,
-                                    ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _isLoading
+                                    ? null
+                                    : _handleGoogleSignIn,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppTheme.textPrimary,
+                                  minimumSize: const Size(double.infinity, 56),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                icon: Image.asset(
+                                  'assets/brand/google_logo.png',
+                                  width: 24,
+                                  height: 24,
+                                ),
+                                label: const Text(
+                                  'Continuar con Google',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                Expanded(child: Divider()),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Botón para email/password (futuro)
-                            OutlinedButton(
-                              onPressed: () {
-                                // TODO: Navegar a pantalla de email/password
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Próximamente disponible'),
-                                  ),
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(double.infinity, 56),
                               ),
-                              child: const Text('Iniciar sesión con email'),
                             ),
+                            const SizedBox(height: 32),
                             const SizedBox(height: 24),
 
                             // Términos y condiciones
@@ -167,7 +156,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   WidgetSpan(
                                     child: GestureDetector(
                                       onTap: () {
-                                        // TODO: Mostrar términos y condiciones
+                                        Navigator.of(
+                                          context,
+                                        ).pushNamed('/terminos');
                                       },
                                       child: const Text(
                                         'Términos y Condiciones',
