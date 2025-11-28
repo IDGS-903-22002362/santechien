@@ -1,3 +1,5 @@
+import '../config/api_config.dart';
+import '../models/actualizar_mascota_request.dart';
 import '../models/api_response.dart';
 import '../models/mascota.dart';
 import '../models/solicitud_cita.dart';
@@ -9,7 +11,7 @@ class MascotaService {
 
   /// Endpoints
   static const String _basePath = '/Mascota';
-  static const String _misMascotasPath = '/MisMascotas';
+  static String get _misMascotasPath => ApiConfig.misMascotas;
 
   /// Obtener todas las mascotas del propietario actual
   Future<ApiResponse<List<Mascota>>> obtenerMisMascotas() async {
@@ -237,7 +239,68 @@ class MascotaService {
     }
   }
 
-  /// Obtener mascota por ID
+  /// Obtener mi mascota por ID
+  Future<ApiResponse<Mascota>> obtenerMiMascota(String id) async {
+    try {
+      print('🐾 Obteniendo mi mascota con ID: $id');
+      final response = await _apiService.get<Mascota>(
+        '$_misMascotasPath/$id',
+        fromJson: (data) {
+          if (data is Map<String, dynamic>) {
+            return Mascota.fromJson(data);
+          }
+          throw Exception('Formato de respuesta inválido: ${data.runtimeType}');
+        },
+      );
+      return response;
+    } catch (e) {
+      return ApiResponse<Mascota>(
+        success: false,
+        message: 'Error al obtener mi mascota',
+        errors: [e.toString()],
+      );
+    }
+  }
+
+  /// Actualizar mi mascota
+  Future<ApiResponse<Mascota>> actualizarMiMascota(
+    String id,
+    ActualizarMascotaRequest request,
+  ) async {
+    try {
+      print('🐾 Actualizando mi mascota con ID: $id');
+      print('🐾 Request data: ${request.toJson()}');
+
+      final response = await _apiService.put<Mascota>(
+        '$_misMascotasPath/$id',
+        body: request.toJson(),
+        fromJson: (data) {
+          print('🐾 Response data type: ${data.runtimeType}');
+          print('🐾 Response data: $data');
+
+          if (data is Map<String, dynamic>) {
+            try {
+              return Mascota.fromJson(data);
+            } catch (e) {
+              print('❌ Error parsing Mascota: $e');
+              rethrow;
+            }
+          }
+          throw Exception('Formato de respuesta inválido: ${data.runtimeType}');
+        },
+      );
+      return response;
+    } catch (e) {
+      print('❌ Error en actualizarMiMascota: $e');
+      return ApiResponse<Mascota>(
+        success: false,
+        message: 'Error al actualizar mi mascota: $e',
+        errors: [e.toString()],
+      );
+    }
+  }
+
+  /// Obtener mascota por ID (desde refugio)
   Future<ApiResponse<Mascota>> obtenerMascotasPorId(String id) async {
     try {
       final response = await _apiService.get<Mascota>(

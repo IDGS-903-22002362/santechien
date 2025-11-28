@@ -2,4 +2,5 @@
 <resources>
     <!-- Color primario para notificaciones -->
     <color name="notification_color">#4CAF50</color>
+	<color name="ic_launcher_background">#E3F2FD</color>
 </resources>

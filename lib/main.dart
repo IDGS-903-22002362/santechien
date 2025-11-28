@@ -18,6 +18,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/citas/citas_screen.dart';
 import 'screens/mascotas/mascotas_screen.dart';
+import 'screens/mascotas/mi_mascota_detalle_screen.dart';
 import 'screens/mascotas/mis_mascotas_screen.dart';
 import 'screens/mascotas/registrar_mascota_screen.dart';
 import 'screens/solicitudes/solicitud_cita_screen.dart';
@@ -26,6 +27,8 @@ import 'screens/donaciones/donacion_screen.dart';
 import 'screens/donaciones/historial_donaciones_screen.dart';
 import 'screens/debug/debug_auth_screen.dart';
 import 'screens/chat/chat_screen.dart';
+import 'screens/perfil/mi_perfil_screen.dart';
+import 'screens/legal/terminos_screen.dart';
 import 'utils/ui_logger.dart';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
@@ -71,7 +74,6 @@ class AdoPetsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdopcionProvider()),
         ChangeNotifierProvider(create: (_) => DonacionProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
-
       ],
       child: MaterialApp(
         title: 'AdoPets',
@@ -101,6 +103,11 @@ class AdoPetsApp extends StatelessWidget {
           '/solicitud-adopcion': (context) => const SolicitudAdopcionScreen(),
 
           '/mis-mascotas': (context) => const MisMascotasScreen(),
+          '/mi-mascota-detalle': (context) {
+            final mascotaId =
+                ModalRoute.of(context)!.settings.arguments as String;
+            return MiMascotaDetalleScreen(mascotaId: mascotaId);
+          },
           '/registrar-mascota': (context) => const RegistrarMascotaScreen(),
           '/solicitar-cita': (context) => const SolicitudCitaScreen(),
           '/mis-solicitudes': (context) => const MisSolicitudesScreen(),
@@ -113,6 +120,9 @@ class AdoPetsApp extends StatelessWidget {
               const HistorialDonacionesScreen(),
 
           '/chat': (context) => const ChatScreen(),
+
+          '/perfil': (context) => const MiPerfilScreen(),
+          '/terminos': (context) => const TerminosScreen(),
 
           '/debug-auth': (context) =>
               const DebugAuthScreen(), // Solo desarrollo

@@ -32,10 +32,14 @@ class AuthProvider with ChangeNotifier {
       if (isAuth) {
         _usuario = await _authService.getCurrentUser();
         _setStatus(AuthStatus.authenticated);
+
+        // Refrescar datos del servidor en segundo plano sin bloquear
+        _refreshUserInfoSilently();
       } else {
         _setStatus(AuthStatus.unauthenticated);
       }
     } catch (e) {
+      debugPrint('Error en initialize: $e');
       _setStatus(AuthStatus.unauthenticated);
     }
   }
@@ -186,28 +190,39 @@ class AuthProvider with ChangeNotifier {
           );
 
       if (response.success) {
-        debugPrint('✅ Dispositivo registrado en backend');
+        debugPrint('Dispositivo registrado en backend');
       } else {
         debugPrint(
-          '⚠️ Error al registrar dispositivo (no crítico): ${response.message}',
+          'Error al registrar dispositivo (no crítico): ${response.message}',
         );
       }
     } catch (e) {
       // No propagar el error - el registro de dispositivo es opcional
-      debugPrint('❌ Error al registrar dispositivo (no crítico): $e');
+      debugPrint('Error al registrar dispositivo (no crítico): $e');
     }
   }
 
-  /// Actualizar información del usuario
+  /// Actualizar información del usuario (solo cuando el usuario lo solicite)
   Future<void> refreshUserInfo() async {
     try {
+      debugPrint('🔄 Refrescando datos del usuario por solicitud explícita...');
       final response = await _authService.getMe();
       if (response.success && response.data != null) {
-        _usuario = response.data;
-        notifyListeners();
+        final newUser = response.data!;
+        if (newUser.id.isNotEmpty && newUser.email.isNotEmpty) {
+          _usuario = newUser;
+          debugPrint('✅ Usuario actualizado: ${newUser.nombreCompleto}');
+          notifyListeners();
+        } else {
+          debugPrint('⚠️ Datos de usuario incompletos del servidor');
+        }
+      } else {
+        debugPrint('❌ Error al actualizar usuario: ${response.message}');
+        // No limpiar _usuario si falla - mantener datos existentes
       }
     } catch (e) {
-      debugPrint('Error al actualizar usuario: $e');
+      debugPrint('❌ Error al actualizar usuario: $e');
+      // No limpiar _usuario si falla - mantener datos existentes
     }
   }
 
@@ -238,5 +253,34 @@ class AuthProvider with ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  /// Refrescar información del usuario en segundo plano
+  Future<void> _refreshUserInfoSilently() async {
+    try {
+      final response = await _authService.getMe();
+      if (response.success && response.data != null) {
+        // Solo actualizar si los datos son válidos y completos
+        final newUser = response.data!;
+        if (newUser.id.isNotEmpty && newUser.email.isNotEmpty) {
+          _usuario = newUser;
+          debugPrint(
+            '✅ Usuario actualizado silenciosamente: ${newUser.nombreCompleto}',
+          );
+          notifyListeners();
+        } else {
+          debugPrint(
+            '⚠️ Datos de usuario incompletos del servidor, manteniendo cache local',
+          );
+        }
+      } else {
+        debugPrint(
+          '❌ Error al obtener usuario del servidor: ${response.message}',
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error en refresh silencioso: $e');
+      // No hacer nada - mantener datos existentes
+    }
   }
 }
