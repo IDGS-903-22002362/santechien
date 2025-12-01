@@ -140,15 +140,6 @@ class AppTheme {
         hintStyle: GoogleFonts.inter(fontSize: 14, color: textSecondary),
       ),
 
-      // Cards
-      cardTheme: CardThemeData(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: surfaceColor,
-      ),
-
       // Dividers
       dividerTheme: const DividerThemeData(
         color: dividerColor,
