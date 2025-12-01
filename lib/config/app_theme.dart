@@ -141,10 +141,10 @@ class AppTheme {
       ),
 
       // Cards
-      cardTheme: const CardThemeData(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
+          borderRadius: BorderRadius.circular(16),
         ),
         color: surfaceColor,
       ),
