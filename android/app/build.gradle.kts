@@ -28,7 +28,7 @@ android {
         applicationId = "com.adopets.app_movil"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion  // Mínimo para FCM
+        minSdk = 23  // Requerido por Firebase Messaging 25.0.1
         targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
