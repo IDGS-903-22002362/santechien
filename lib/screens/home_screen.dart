@@ -177,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListTile(
                   leading: const Icon(Icons.calendar_today),
-                  title: const Text('Mis Citas'),
+                  title: const Text('Mis citas'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/citas');
@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListTile(
                   leading: const Icon(Icons.event_available),
-                  title: const Text('Solicitar Cita'),
+                  title: const Text('Solicitar cita'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/solicitar-cita');
@@ -201,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListTile(
                   leading: const Icon(Icons.pets),
-                  title: const Text('Mascotas adopción'),
+                  title: const Text('Mascotas en adopción'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/mascotas');
@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen>
 
                 ListTile(
                   leading: const Icon(Icons.assignment),
-                  title: const Text('Mis Solicitudes'),
+                  title: const Text('Mis solicitudes'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/mis-solicitudes');
@@ -218,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListTile(
                   leading: const Icon(Icons.pets),
-                  title: const Text('Mis Mascotas'),
+                  title: const Text('Mis mascotas'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/mis-mascotas');
@@ -226,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListTile(
                   leading: const Icon(Icons.history),
-                  title: const Text('Mis Adopciones'),
+                  title: const Text('Mis solicitudes de adopción'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/mis-solicitudes-adopcion');
@@ -236,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen>
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.volunteer_activism),
-                  title: const Text('Hacer Donación'),
+                  title: const Text('Hacer una donación'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/donaciones');
@@ -244,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListTile(
                   leading: const Icon(Icons.receipt_long),
-                  title: const Text('Historial Donaciones'),
+                  title: const Text('Historial de donaciones'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/donaciones/historial');
