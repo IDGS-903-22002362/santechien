@@ -25,7 +25,7 @@ class AdopcionProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 📌 Enviar solicitud de adopción con usuarioId incluido
+  /// Enviar solicitud de adopción con usuarioId incluido
   Future<void> enviarSolicitud(Adopcion solicitud) async {
     try {
       _setLoading(true);
